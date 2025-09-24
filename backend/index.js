@@ -23,5 +23,5 @@ app.use("/api", apiRoutes);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`[RUN] Backend running at http://localhost:${PORT}`);
+	console.log(`[RUN] Backend running at http://localhost:${PORT}`);
 });
