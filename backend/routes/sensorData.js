@@ -27,7 +27,9 @@ router.get("/", async (req, res) => {
 			.limit(parsedLimit)
 			.offset(offset);
 
-		const totalResult = await knex("sensor_readings").count("* as count").first();
+		const totalResult = await knex("sensor_readings")
+			.count("* as count")
+			.first();
 		const total = totalResult?.count || 0;
 
 		res.json({
@@ -56,7 +58,9 @@ router.get("/interval-paginated", async (req, res) => {
 			.join("devices as d", "r.mac_address", "=", "d.mac_address")
 			.select(
 				"r.id",
-				knex.raw("to_char(r.insert_timestamp, 'YYYY-MM-DD HH24:MI:SS') as start"),
+				knex.raw(
+					"to_char(r.insert_timestamp, 'YYYY-MM-DD HH24:MI:SS') as start"
+				),
 				knex.raw(
 					"to_char(LEAD(r.insert_timestamp) OVER (ORDER BY r.id ASC), 'YYYY-MM-DD HH24:MI:SS') as end"
 				),
@@ -71,7 +75,9 @@ router.get("/interval-paginated", async (req, res) => {
 			.limit(parsedLimit)
 			.offset(offset);
 
-		const totalResult = await knex("sensor_readings").count("* as count").first();
+		const totalResult = await knex("sensor_readings")
+			.count("* as count")
+			.first();
 		const total = totalResult?.count || 0;
 
 		res.json({
@@ -93,35 +99,69 @@ router.get("/interval", async (req, res) => {
 	try {
 		const { mac_address, from, to } = req.query;
 
+		let fromDate;
+		let toDate;
+
+		if (from) {
+			const date = new Date(from);
+			fromDate = new Date(date.setHours(0, 0, 0, 0)).toISOString(); // awal hari
+			toDate = new Date(date.setHours(23, 59, 59, 999)).toISOString(); // akhir hari
+		} else if (to) {
+			const date = new Date(to);
+			toDate = date.toISOString();
+		}
+
 		const rows = await knex("sensor_readings as r")
 			.join("devices as d", "r.mac_address", "=", "d.mac_address")
 			.modify((qb) => {
-				if (mac_address) {
-					qb.where("r.mac_address", mac_address);
-				}
-				if (from) {
-					qb.whereRaw("DATE(r.insert_timestamp) >= ?", [from]);
-				}
-				if (to) {
-					qb.whereRaw("DATE(r.insert_timestamp) <= ?", [to]);
-				}
+				if (mac_address) qb.where("r.mac_address", mac_address);
+				if (fromDate && toDate)
+					qb.whereBetween("r.insert_timestamp", [fromDate, toDate]);
+				else if (fromDate)
+					qb.where("r.insert_timestamp", ">=", fromDate);
+				else if (toDate) qb.where("r.insert_timestamp", "<=", toDate);
 			})
 			.select(
-				"r.id",
-				knex.raw("to_char(r.insert_timestamp, 'YYYY-MM-DD HH24:MI:SS') as start"),
-				knex.raw(
-					"to_char(LEAD(r.insert_timestamp) OVER (ORDER BY r.id ASC), 'YYYY-MM-DD HH24:MI:SS') as end"
-				),
 				"d.device_name",
-				"d.location",
 				"r.mac_address",
-				"r.red_information",
-				"r.amber_information",
-				"r.green_information"
+				knex.raw(
+					"to_char(r.insert_timestamp, 'YYYY-MM-DD HH24:MI:SS') as start"
+				),
+				knex.raw(`to_char(
+					LEAD(r.insert_timestamp, 1, NOW()) OVER (
+						PARTITION BY r.mac_address ORDER BY r.id ASC
+					), 'YYYY-MM-DD HH24:MI:SS') as "end"`),
+				knex.raw(`CASE
+					WHEN r.red_information = 1 THEN 'Error'
+					WHEN r.amber_information = 1 THEN 'Idle'
+					WHEN r.green_information = 1 THEN 'Run'
+					ELSE 'Unknown'
+				END as status`)
 			)
 			.orderBy("r.id", "asc");
 
-		res.json({ data: rows });
+		const seriesMap = {};
+
+		for (const row of rows) {
+			const startTime = new Date(row.start).getTime();
+			const endTime = new Date(row.end).getTime();
+			if (isNaN(startTime) || isNaN(endTime)) continue;
+
+			if (!seriesMap[row.status])
+				seriesMap[row.status] = { name: row.status, data: [] };
+
+			seriesMap[row.status].data.push({
+				x: row.device_name || row.mac_address,
+				y: [startTime, endTime],
+			});
+		}
+
+		const order = ["Run", "Idle", "Error", "Unknown"];
+		const seriesOrdered = order
+			.map((status) => seriesMap[status])
+			.filter(Boolean);
+
+		res.json({ series: seriesOrdered });
 	} catch (err) {
 		console.error("GET /api/sensor-data/interval error:", err.message);
 		res.status(500).json({ error: "Internal Server Error" });

@@ -28,7 +28,7 @@ const runAllChecks = async () => {
 	const isConnected = await checkRedisConnection();
 	if (!isConnected) return;
 
-	await checkDeviceCache("AA:BB:CC:DD:EE:01");
+	await checkDeviceCache("40:F5:20:47:24:BC");
 };
 
 runAllChecks();
