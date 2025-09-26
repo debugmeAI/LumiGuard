@@ -104,48 +104,61 @@ router.get("/interval", async (req, res) => {
 
 		if (from) {
 			const date = new Date(from);
-			fromDate = new Date(date.setHours(0, 0, 0, 0)).toISOString(); // awal hari
-			toDate = new Date(date.setHours(23, 59, 59, 999)).toISOString(); // akhir hari
+			fromDate = new Date(date.setHours(0, 0, 0, 0)).toISOString();
+			toDate = new Date(date.setHours(23, 59, 59, 999)).toISOString();
 		} else if (to) {
 			const date = new Date(to);
-			toDate = date.toISOString();
+			fromDate = new Date(date.setHours(0, 0, 0, 0)).toISOString();
+			toDate = new Date(date.setHours(23, 59, 59, 999)).toISOString();
 		}
 
-		const rows = await knex("sensor_readings as r")
+		const subquery = knex("sensor_readings as r")
 			.join("devices as d", "r.mac_address", "=", "d.mac_address")
+			.where("d.status", "Active")
 			.modify((qb) => {
 				if (mac_address) qb.where("r.mac_address", mac_address);
 				if (fromDate && toDate)
 					qb.whereBetween("r.insert_timestamp", [fromDate, toDate]);
-				else if (fromDate)
-					qb.where("r.insert_timestamp", ">=", fromDate);
-				else if (toDate) qb.where("r.insert_timestamp", "<=", toDate);
 			})
 			.select(
-				"d.device_name",
+				"r.id",
 				"r.mac_address",
+				"d.device_name",
+				"r.insert_timestamp",
 				knex.raw(
-					"to_char(r.insert_timestamp, 'YYYY-MM-DD HH24:MI:SS') as start"
+					"LEAD(r.insert_timestamp) OVER (PARTITION BY r.mac_address ORDER BY r.id) as end_time"
 				),
-				knex.raw(`to_char(
-					LEAD(r.insert_timestamp, 1, NOW()) OVER (
-						PARTITION BY r.mac_address ORDER BY r.id ASC
-					), 'YYYY-MM-DD HH24:MI:SS') as "end"`),
 				knex.raw(`CASE
-					WHEN r.red_information = 1 THEN 'Error'
-					WHEN r.amber_information = 1 THEN 'Idle'
-					WHEN r.green_information = 1 THEN 'Run'
-					ELSE 'Unknown'
-				END as status`)
+          WHEN r.red_information = 1 THEN 'Error'
+          WHEN r.amber_information = 1 THEN 'Idle'
+          WHEN r.green_information = 1 THEN 'Run'
+          ELSE 'Unknown'
+        END as status`)
 			)
-			.orderBy("r.id", "asc");
+			.as("t");
 
+		const rows = await knex
+			.select(
+				"t.device_name",
+				"t.mac_address",
+				knex.raw(
+					"to_char(t.insert_timestamp, 'YYYY-MM-DD HH24:MI:SS') as start"
+				),
+				knex.raw("to_char(t.end_time, 'YYYY-MM-DD HH24:MI:SS') as end"),
+				"t.status"
+			)
+			.from(subquery)
+			.whereNotNull("t.end_time") // <- row terakhir hilang
+			.orderBy("t.mac_address")
+			.orderBy("t.id");
+
+		// Mapping series untuk chart
 		const seriesMap = {};
-
 		for (const row of rows) {
 			const startTime = new Date(row.start).getTime();
 			const endTime = new Date(row.end).getTime();
-			if (isNaN(startTime) || isNaN(endTime)) continue;
+
+			if (!startTime || !endTime) continue;
 
 			if (!seriesMap[row.status])
 				seriesMap[row.status] = { name: row.status, data: [] };
