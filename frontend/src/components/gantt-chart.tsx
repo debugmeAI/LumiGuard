@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import ReactApexChart from "react-apexcharts";
 import { type ApexOptions } from "apexcharts";
 import { type DateRange } from "react-day-picker";
-
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Ban } from "lucide-react";
 interface TimelineData {
 	x: string;
 	y: [number, number];
@@ -44,6 +45,8 @@ export function GanttChart({ dateRange }: GanttChartProps) {
 	useEffect(() => {
 		const fetchData = async () => {
 			setLoading(true);
+			const start = Date.now();
+
 			try {
 				const from = dateRange?.from
 					? dateRange.from.toISOString()
@@ -74,7 +77,11 @@ export function GanttChart({ dateRange }: GanttChartProps) {
 				console.error("Error fetching API:", error);
 				setSeries([]);
 			} finally {
-				setLoading(false);
+				const elapsed = Date.now() - start;
+				const minDelay = 500; // minimal 500ms loading
+				const remaining = Math.max(0, minDelay - elapsed);
+
+				setTimeout(() => setLoading(false), remaining);
 			}
 		};
 
@@ -112,8 +119,22 @@ export function GanttChart({ dateRange }: GanttChartProps) {
 	};
 
 	return loading ? (
-		<div className="text-center py-24 text-muted-foreground">
-			Loading...
+		<div className="flex justify-center items-center min-h-[700px] w-full">
+			<Badge
+				variant="outline"
+				className="text-base border-yellow-300 text-yellow-500 dark:border-yellow-900 dark:text-yellow-400">
+				<Loader2 className="animate-spin w-4 h-4 me-1.5" />
+				Loading
+			</Badge>
+		</div>
+	) : series.length === 0 || series.every((s) => s.data.length === 0) ? (
+		<div className="flex justify-center items-center min-h-[700px] w-full">
+			<Badge
+				variant="outline"
+				className="text-base border-red-300 text-red-500 dark:border-red-900 dark:text-red-400">
+				<Ban className="w-4 h-4 me-1.5" />
+				No data available
+			</Badge>
 		</div>
 	) : (
 		<ReactApexChart
