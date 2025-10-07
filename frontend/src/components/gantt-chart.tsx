@@ -1,35 +1,33 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import ReactApexChart from "react-apexcharts";
 import { type ApexOptions } from "apexcharts";
-import { type DateRange } from "react-day-picker";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Ban } from "lucide-react";
-interface TimelineData {
+
+export interface TimelineData {
 	x: string;
 	y: [number, number];
 }
 
-interface SeriesData {
+export interface SeriesData {
 	name: string;
 	data: TimelineData[];
 }
 
-interface ApiResponse {
-	series: SeriesData[];
-}
-
 interface GanttChartProps {
-	dateRange?: DateRange;
+	series: SeriesData[];
+	loading: boolean;
 }
 
-export function GanttChart({ dateRange }: GanttChartProps) {
-	const [series, setSeries] = useState<ApexAxisChartSeries>([]);
-	const [loading, setLoading] = useState(true);
+const COLOR_MAP: Record<string, string> = {
+	Run: "#22c55e",
+	Idle: "#eab308",
+	Error: "#ef4444",
+	Unknown: "#6b7280",
+};
+
+export function GanttChart({ series, loading }: GanttChartProps) {
 	const [isDark, setIsDark] = useState(false);
 
-	// deteksi dark mode
 	useEffect(() => {
 		const checkDark = () =>
 			setIsDark(document.documentElement.classList.contains("dark"));
@@ -42,61 +40,37 @@ export function GanttChart({ dateRange }: GanttChartProps) {
 		return () => observer.disconnect();
 	}, []);
 
-	useEffect(() => {
-		const fetchData = async () => {
-			setLoading(true);
-			const start = Date.now();
-
-			try {
-				const from = dateRange?.from
-					? dateRange.from.toISOString()
-					: new Date().setHours(0, 0, 0, 0);
-				const to = dateRange?.to
-					? dateRange.to.toISOString()
-					: new Date().setHours(23, 59, 59, 999);
-
-				const res = await fetch(
-					`http://localhost:3000/api/sensor-data/interval?from=${encodeURIComponent(
-						from.toString()
-					)}&to=${encodeURIComponent(to.toString())}`
-				);
-
-				if (!res.ok) throw new Error("Failed to fetch data");
-
-				const json: ApiResponse = await res.json();
-
-				const apexSeries: ApexAxisChartSeries = json.series.map(
-					(s) => ({
-						name: s.name,
-						data: s.data.map((d) => ({ x: d.x, y: d.y })),
-					})
-				);
-
-				setSeries(apexSeries);
-			} catch (error) {
-				console.error("Error fetching API:", error);
-				setSeries([]);
-			} finally {
-				const elapsed = Date.now() - start;
-				const minDelay = 500; // minimal 500ms loading
-				const remaining = Math.max(0, minDelay - elapsed);
-
-				setTimeout(() => setLoading(false), remaining);
-			}
-		};
-
-		fetchData();
-	}, [dateRange]);
+	if (loading) return <div>Loading GanttChart...</div>;
+	if (series.length === 0) return <div>No data</div>;
 
 	const options: ApexOptions = {
 		chart: {
+			toolbar: {
+				show: true,
+				tools: {
+					download: false,
+					selection: false,
+					zoom: false,
+					zoomin: true,
+					zoomout: true,
+					pan: true,
+					reset: true,
+					customIcons: [],
+				},
+				autoSelected: "pan",
+			},
 			height: 600,
 			type: "rangeBar",
 			background: isDark ? "#171717" : "#FFFFFF",
 			foreColor: isDark ? "#F3F4F6" : "#171717",
 		},
-		plotOptions: { bar: { horizontal: true, rangeBarGroupRows: true } },
-		colors: ["#4CAF50", "#FF9800", "#F44336", "#9E9E9E"],
+		plotOptions: {
+			bar: {
+				horizontal: true,
+				rangeBarGroupRows: true,
+			},
+		},
+		colors: series.map((s) => COLOR_MAP[s.name] ?? "#3b82f6"),
 		fill: { type: "solid" },
 		xaxis: {
 			type: "datetime",
@@ -113,35 +87,17 @@ export function GanttChart({ dateRange }: GanttChartProps) {
 			x: { format: "HH:mm:ss" },
 		},
 		legend: {
-			position: "top",
+			position: "bottom",
 			labels: { colors: isDark ? "#F3F4F6" : "#1F2937" },
 		},
 	};
 
-	return loading ? (
-		<div className="flex justify-center items-center min-h-[700px] w-full">
-			<Badge
-				variant="outline"
-				className="text-base border-yellow-300 text-yellow-500 dark:border-yellow-900 dark:text-yellow-400">
-				<Loader2 className="animate-spin w-4 h-4 me-1.5" />
-				Loading
-			</Badge>
-		</div>
-	) : series.length === 0 || series.every((s) => s.data.length === 0) ? (
-		<div className="flex justify-center items-center min-h-[700px] w-full">
-			<Badge
-				variant="outline"
-				className="text-base border-red-300 text-red-500 dark:border-red-900 dark:text-red-400">
-				<Ban className="w-4 h-4 me-1.5" />
-				No data available
-			</Badge>
-		</div>
-	) : (
+	return (
 		<ReactApexChart
 			options={options}
 			series={series}
 			type="rangeBar"
-			height={400}
+			height={250}
 			width="100%"
 		/>
 	);

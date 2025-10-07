@@ -44,7 +44,9 @@ router.get("/", async (req, res) => {
 
 router.get("/list", async (req, res) => {
 	try {
-		const rows = await knex("devices").select("*").orderBy("device_name", "asc");
+		const rows = await knex("devices")
+			.select("*")
+			.orderBy("device_name", "asc");
 		res.json(rows);
 	} catch (err) {
 		console.error("GET /devices/list error:", err.message);
@@ -54,7 +56,9 @@ router.get("/list", async (req, res) => {
 
 router.get("/list-active", async (req, res) => {
 	try {
-		const rows = await knex("devices").select("*").where("status", "Active");
+		const rows = await knex("devices")
+			.select("*")
+			.where("status", "Active");
 		res.json(rows);
 	} catch (err) {
 		console.error("GET /devices/list-active error:", err.message);
@@ -141,6 +145,67 @@ router.post("/", async (req, res) => {
 					error: "Duplicate entry found",
 				});
 			}
+		} else {
+			res.status(500).json({ error: "Internal Server Error" });
+		}
+	}
+});
+
+router.put("/:mac", async (req, res) => {
+	const trx = await knex.transaction();
+
+	try {
+		const { mac } = req.params;
+		const { name, location, status, thresholds } = req.body;
+
+		const existingDevice = await trx("devices")
+			.where("mac_address", mac)
+			.first();
+
+		if (!existingDevice) {
+			return res.status(404).json({
+				error: "Device not found",
+			});
+		}
+
+		if (name && name !== existingDevice.device_name) {
+			const duplicateName = await trx("devices")
+				.where("device_name", name)
+				.whereNot("mac_address", mac)
+				.first();
+
+			if (duplicateName) {
+				return res.status(400).json({
+					error: "Device with this name already exists",
+				});
+			}
+		}
+
+		await trx("devices").where("mac_address", mac).update({
+			device_name: name,
+			location: location,
+			status: status,
+			updated_at: knex.fn.now(),
+		});
+
+		await trx.commit();
+
+		res.json({
+			message: "Device updated successfully",
+			mac_address: mac,
+			device_name: name,
+		});
+	} catch (err) {
+		await trx.rollback();
+		console.error("PUT /devices/:mac error:", err.message);
+
+		if (
+			err.code === "ER_DUP_ENTRY" &&
+			err.message.includes("device_name")
+		) {
+			res.status(400).json({
+				error: "Device with this name already exists",
+			});
 		} else {
 			res.status(500).json({ error: "Internal Server Error" });
 		}
