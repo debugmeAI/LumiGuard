@@ -49,6 +49,7 @@ export default function HistoricalData() {
 	const [loading, setLoading] = useState(false);
 	const [data, setData] = useState<SummaryData | null>(null);
 	const [hasSearched, setHasSearched] = useState(false);
+	const [showData, setShowData] = useState(false);
 
 	const formatLocalDate = (date: Date) => {
 		const year = date.getFullYear();
@@ -146,6 +147,7 @@ export default function HistoricalData() {
 		}
 
 		setLoading(true);
+		setShowData(false);
 		setHasSearched(true);
 
 		try {
@@ -171,10 +173,15 @@ export default function HistoricalData() {
 
 			const result: SummaryData = await response.json();
 			setData(result);
+			setLoading(false);
+
+			// Delay untuk menampilkan data setelah loading
+			setTimeout(() => {
+				setShowData(true);
+			}, 1000);
 		} catch (error) {
 			console.error("Error fetching data:", error);
 			setData(null);
-		} finally {
 			setLoading(false);
 		}
 	};
@@ -189,6 +196,7 @@ export default function HistoricalData() {
 	const dateData: DatePerformance[] = data?.per_date || [];
 	const [openStart, setOpenStart] = useState(false);
 	const [openEnd, setOpenEnd] = useState(false);
+
 	return (
 		<SidebarProvider>
 			<AppSidebar />
@@ -225,9 +233,8 @@ export default function HistoricalData() {
 								Historical Data
 							</CardTitle>
 							<CardDescription>
-								Analyze device performance data by date range
+								Analyze machine performance data
 							</CardDescription>
-
 							<CardAction className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 								<div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full sm:w-auto">
 									<div className="flex flex-col sm:flex-row gap-3">
@@ -313,7 +320,7 @@ export default function HistoricalData() {
 										</Button>
 									</div>
 								</div>
-								{!loading && hasAnyData && (
+								{!loading && showData && hasAnyData && (
 									<div className="flex w-full sm:w-auto">
 										<Button
 											variant="outline"
@@ -341,7 +348,7 @@ export default function HistoricalData() {
 									</Badge>
 								</div>
 							)}
-							{loading && (
+							{(loading || !showData) && hasSearched && (
 								<div className="flex justify-center py-80">
 									<Badge
 										variant="outline"
@@ -351,21 +358,28 @@ export default function HistoricalData() {
 									</Badge>
 								</div>
 							)}
-							{!loading && hasSearched && !hasAnyData && (
-								<div className="flex justify-center py-80">
-									<Badge
-										variant="outline"
-										className="text-base border-red-300 text-red-500 dark:border-red-900 dark:text-red-400">
-										<Ban className="w-4 h-4 me-1.5" />
-										No data available for selected range
-									</Badge>
-								</div>
-							)}
-							{!loading && hasSearched && hasAnyData && data && (
-								<div className="space-y-6">
-									<DateTable data={dateData} />
-								</div>
-							)}
+							{!loading &&
+								showData &&
+								hasSearched &&
+								!hasAnyData && (
+									<div className="flex justify-center py-80">
+										<Badge
+											variant="outline"
+											className="text-base border-red-300 text-red-500 dark:border-red-900 dark:text-red-400">
+											<Ban className="w-4 h-4 me-1.5" />
+											No data available for selected range
+										</Badge>
+									</div>
+								)}
+							{!loading &&
+								showData &&
+								hasSearched &&
+								hasAnyData &&
+								data && (
+									<div className="space-y-6">
+										<DateTable data={dateData} />
+									</div>
+								)}
 						</CardContent>
 					</Card>
 				</div>

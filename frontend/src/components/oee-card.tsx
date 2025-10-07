@@ -42,8 +42,6 @@ export function OEECard({
 	const unknownSeconds = parseFloat(unknown_seconds);
 	const totalSeconds = parseFloat(total_seconds);
 
-	console.log(totalSeconds);
-
 	const formatTime = (seconds: number) => {
 		const hours = Math.floor(seconds / 3600);
 		const minutes = Math.floor((seconds % 3600) / 60);

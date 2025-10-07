@@ -61,7 +61,7 @@ const chartConfig = {
 	},
 	oee: {
 		label: "OEE",
-		color: "#0ea5e9",
+		color: "#2ebdffff",
 	},
 } satisfies ChartConfig;
 
@@ -69,10 +69,12 @@ export function HistoricalChart({ range = "7days" }: { range?: string }) {
 	const [chartData, setChartData] = useState<ChartData[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(false);
+	const [showChart, setShowChart] = useState(false);
 
 	useEffect(() => {
 		const fetchData = async () => {
 			setLoading(true);
+			setShowChart(false);
 			setError(false);
 
 			try {
@@ -89,8 +91,8 @@ export function HistoricalChart({ range = "7days" }: { range?: string }) {
 					const date = new Date(item.date);
 					const dateStr = date.toLocaleDateString("id-ID", {
 						day: "2-digit",
-						month: "short",
-						year: "numeric",
+						month: "numeric",
+						year: "2-digit",
 					});
 					return {
 						date: dateStr,
@@ -102,11 +104,14 @@ export function HistoricalChart({ range = "7days" }: { range?: string }) {
 				});
 
 				setChartData(formatted);
+				setLoading(false);
+				setTimeout(() => {
+					setShowChart(true);
+				}, 1000);
 			} catch (err) {
 				console.error("Error fetching chart data:", err);
 				setError(true);
 				setChartData([]);
-			} finally {
 				setLoading(false);
 			}
 		};
@@ -114,14 +119,14 @@ export function HistoricalChart({ range = "7days" }: { range?: string }) {
 		fetchData();
 	}, [range]);
 
-	if (loading) {
+	if (loading || !showChart) {
 		return (
 			<div className="flex justify-center items-center h-[670px]">
 				<Badge
 					variant="outline"
 					className="text-base border-yellow-300 text-yellow-500 dark:border-yellow-900 dark:text-yellow-400">
 					<Loader2 className="animate-spin w-4 h-4 me-1.5" />
-					Loading OEE data...
+					Loading data...
 				</Badge>
 			</div>
 		);
@@ -145,14 +150,14 @@ export function HistoricalChart({ range = "7days" }: { range?: string }) {
 			<ResponsiveContainer width="100%" height="100%">
 				<ComposedChart
 					data={chartData}
-					margin={{ top: 20, right: 30, left: 10, bottom: 0 }}>
+					margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
 					<CartesianGrid strokeDasharray="3 3" vertical={false} />
 					<XAxis
 						dataKey="date"
-						tickLine={false}
+						tickLine={true}
 						axisLine={false}
 						tickMargin={10}
-						textAnchor="end"
+						textAnchor="middle"
 					/>
 					<YAxis
 						yAxisId="left"
@@ -161,13 +166,15 @@ export function HistoricalChart({ range = "7days" }: { range?: string }) {
 						tickFormatter={(v) => `${v}%`}
 						tickLine={false}
 						axisLine={false}
+						hide
 					/>
 					<YAxis
 						yAxisId="right"
-						orientation="right"
+						orientation="left"
 						domain={[0, 100]}
 						tickFormatter={(v) => `${v}%`}
-						hide
+						tickLine={true}
+						axisLine={false}
 					/>
 					<ChartTooltip
 						content={
@@ -207,12 +214,12 @@ export function HistoricalChart({ range = "7days" }: { range?: string }) {
 					<ReferenceLine
 						y={TARGET_OEE}
 						yAxisId="right"
-						stroke="#eeff00ff"
-						strokeDasharray="3 3"
+						stroke="#ffae00ff"
+						strokeDasharray="13 7"
 						label={{
 							value: `OEE Target`,
 							position: "top",
-							fill: "#eeff00ff",
+							fill: "#ffae00ff",
 							fontSize: 14,
 							offset: 10,
 						}}
@@ -224,7 +231,7 @@ export function HistoricalChart({ range = "7days" }: { range?: string }) {
 						stackId="1"
 						fill="var(--color-green)"
 						stroke="var(--color-green)"
-						fillOpacity={0.3}
+						fillOpacity={0.4}
 					/>
 					<Area
 						yAxisId="left"
@@ -233,7 +240,7 @@ export function HistoricalChart({ range = "7days" }: { range?: string }) {
 						stackId="1"
 						fill="var(--color-amber)"
 						stroke="var(--color-amber)"
-						fillOpacity={0.3}
+						fillOpacity={0.4}
 					/>
 					<Area
 						yAxisId="left"
@@ -242,7 +249,7 @@ export function HistoricalChart({ range = "7days" }: { range?: string }) {
 						stackId="1"
 						fill="var(--color-red)"
 						stroke="var(--color-red)"
-						fillOpacity={0.3}
+						fillOpacity={0.4}
 					/>
 					<Line
 						yAxisId="right"

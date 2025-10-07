@@ -108,17 +108,10 @@ export default function DateTable({ data }: DateTableProps) {
 
 	const getShiftTypeVariant = (shiftType: string) => {
 		if (shiftType.includes("Overtime")) return "secondary";
-		if (shiftType.includes("Normal")) return "outline";
-		if (shiftType.includes("24-hour")) return "default";
+		if (shiftType.includes("Normal")) return "secondary";
+		if (shiftType.includes("24-hour")) return "secondary";
 	};
 
-	if (!data || data.length === 0) {
-		return (
-			<div className="text-center py-8 text-muted-foreground border rounded-lg">
-				No date summary data available
-			</div>
-		);
-	}
 	const formatDateYMD = (dateString: string) => {
 		const d = new Date(dateString);
 		const year = d.getFullYear();

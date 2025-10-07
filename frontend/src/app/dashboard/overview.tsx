@@ -255,13 +255,6 @@ function OverviewContent() {
 	const hasGantt = ganttData.length > 0;
 
 	const hasAnyData = hasDevice || hasShift || hasGantt;
-	console.log({
-		hasTotal,
-		hasDevice,
-		hasShift,
-		hasGantt,
-		hasAnyData,
-	});
 
 	return (
 		<>
