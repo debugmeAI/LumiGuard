@@ -41,7 +41,7 @@ interface ChartData {
 	red: number;
 	amber: number;
 	green: number;
-	oee: number;
+	oee: number | null;
 }
 
 const TARGET_OEE = 85;
@@ -94,17 +94,34 @@ export function HistoricalChart({ range = "7days" }: { range?: string }) {
 						month: "numeric",
 						year: "2-digit",
 					});
+
+					const red = parseFloat(item.red_percent) || 0;
+					const amber = parseFloat(item.amber_percent) || 0;
+					const green = parseFloat(item.green_percent) || 0;
+					const oeeValue = parseFloat(item.availability_oee) || 0;
+
 					return {
 						date: dateStr,
-						red: parseFloat(item.red_percent) || 0,
-						amber: parseFloat(item.amber_percent) || 0,
-						green: parseFloat(item.green_percent) || 0,
-						oee: parseFloat(item.availability_oee) || 0,
+						red,
+						amber,
+						green,
+						// Jika OEE = 0, ubah jadi null agar garis tidak digambar
+						oee: oeeValue === 0 ? null : oeeValue,
 					};
 				});
 
-				setChartData(formatted);
+				// Exclude baris yang semua nilainya 0
+				const filtered = formatted.filter(
+					(d) =>
+						d.red !== 0 ||
+						d.amber !== 0 ||
+						d.green !== 0 ||
+						d.oee !== null
+				);
+
+				setChartData(filtered);
 				setLoading(false);
+
 				setTimeout(() => {
 					setShowChart(true);
 				}, 1000);
@@ -259,6 +276,7 @@ export function HistoricalChart({ range = "7days" }: { range?: string }) {
 						strokeWidth={2}
 						activeDot={{ r: 4 }}
 						dot={false}
+						connectNulls={false}
 					/>
 				</ComposedChart>
 			</ResponsiveContainer>
