@@ -2,7 +2,7 @@
 
 import { ChevronsUpDown, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -19,11 +19,19 @@ import {
 } from "@/components/ui/sidebar";
 import { AboutDialog } from "@/components/about";
 
+function stringToColor(str: string) {
+	let hash = 0;
+	for (let i = 0; i < str.length; i++) {
+		hash = str.charCodeAt(i) + ((hash << 5) - hash);
+	}
+	const color = `hsl(${hash % 360}, 60%, 70%)`;
+	return color;
+}
+
 export function NavUser() {
 	const { isMobile } = useSidebar();
 	const navigate = useNavigate();
 
-	// Ambil user dari localStorage
 	const storedUser = localStorage.getItem("user");
 	const user = storedUser ? JSON.parse(storedUser) : null;
 
@@ -33,7 +41,7 @@ export function NavUser() {
 		navigate("/login", { replace: true });
 	};
 
-	if (!user) return null; // Belum login
+	if (!user) return null;
 
 	return (
 		<SidebarMenu>
@@ -43,13 +51,22 @@ export function NavUser() {
 						<SidebarMenuButton
 							size="lg"
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-							<Avatar className="h-8 w-8 rounded-lg">
-								<AvatarImage
-									src="/avatar.png"
-									alt={user.username}
-								/>
-								<AvatarFallback className="rounded-lg">
-									{user.username?.charAt(0).toUpperCase()}
+							<Avatar className="h-8 w-8 rounded-md">
+								<AvatarFallback
+									className="rounded-lg flex items-center justify-center text-white"
+									style={{
+										backgroundColor: stringToColor(
+											user.username || "default"
+										),
+									}}>
+									{user.username
+										?.split(" ")
+										.filter(Boolean)
+										.map((word: string) =>
+											word[0].toUpperCase()
+										)
+										.join("")
+										.slice(0, 2) || "U"}
 								</AvatarFallback>
 							</Avatar>
 							<div className="grid flex-1 text-left text-sm leading-tight">
@@ -70,13 +87,22 @@ export function NavUser() {
 						sideOffset={4}>
 						<DropdownMenuLabel className="p-0 font-normal">
 							<div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-								<Avatar className="h-8 w-8 rounded-lg">
-									<AvatarImage
-										src="/avatar.png"
-										alt={user.username}
-									/>
-									<AvatarFallback className="rounded-lg">
-										{user.username?.charAt(0).toUpperCase()}
+								<Avatar className="h-8 w-8 rounded-md">
+									<AvatarFallback
+										className="rounded-lg flex items-center justify-center text-white"
+										style={{
+											backgroundColor: stringToColor(
+												user.username || "default"
+											),
+										}}>
+										{user.username
+											?.split(" ")
+											.filter(Boolean)
+											.map((word: string) =>
+												word[0].toUpperCase()
+											)
+											.join("")
+											.slice(0, 2) || "U"}
 									</AvatarFallback>
 								</Avatar>
 								<div className="grid flex-1 text-left text-sm leading-tight">

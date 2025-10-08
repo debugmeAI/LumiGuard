@@ -449,7 +449,7 @@ export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
 					</div>
 					<div className="flex items-center justify-between">
 						<div className="text-muted-foreground text-sm">
-							{pagination.total} row(s) found.
+							{pagination.total} device(s) found
 						</div>
 
 						<div className="flex items-center gap-1 flex-wrap">

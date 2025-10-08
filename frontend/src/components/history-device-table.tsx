@@ -266,8 +266,7 @@ export default function DateTable({ data }: DateTableProps) {
 			</div>
 			<div className="flex items-center justify-between">
 				<div className="text-muted-foreground text-sm">
-					Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of{" "}
-					{totalItems} period(s)
+					{totalItems} period(s) found
 				</div>
 
 				<div className="flex items-center gap-1 flex-wrap">

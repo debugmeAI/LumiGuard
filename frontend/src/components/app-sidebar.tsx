@@ -49,12 +49,6 @@ const navData = [
 	},
 ];
 
-const userData = {
-	name: "Gilang Fauzi",
-	email: "gilangfauzi@example.com",
-	avatar: "",
-};
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const location = useLocation();
 	const navWithActive = navData.map((section) => {
@@ -97,7 +91,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				<NavMain items={navWithActive} />
 			</SidebarContent>
 			<SidebarFooter>
-				<NavUser user={userData} />
+				<NavUser />
 			</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>
