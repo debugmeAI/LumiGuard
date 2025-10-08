@@ -24,7 +24,7 @@ function stringToColor(str: string) {
 	for (let i = 0; i < str.length; i++) {
 		hash = str.charCodeAt(i) + ((hash << 5) - hash);
 	}
-	const color = `hsl(${hash % 360}, 60%, 70%)`;
+	const color = `hsl(${hash % 360}, 30%, 40%)`;
 	return color;
 }
 
@@ -53,7 +53,7 @@ export function NavUser() {
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
 							<Avatar className="h-8 w-8 rounded-md">
 								<AvatarFallback
-									className="rounded-lg flex items-center justify-center text-white"
+									className="rounded-lg flex items-center justify-center text-white font-semibold"
 									style={{
 										backgroundColor: stringToColor(
 											user.username || "default"
@@ -89,7 +89,7 @@ export function NavUser() {
 							<div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
 								<Avatar className="h-8 w-8 rounded-md">
 									<AvatarFallback
-										className="rounded-lg flex items-center justify-center text-white"
+										className="rounded-lg flex items-center justify-center text-white font-semibold"
 										style={{
 											backgroundColor: stringToColor(
 												user.username || "default"
