@@ -33,22 +33,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { toast } from "sonner";
-import { CheckCircle, XCircle, SquareChartGantt } from "lucide-react";
+import { CheckCircle, XCircle, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { DeleteDeviceDialog } from "@/app/configuration/dialog/delete-device-dialog";
-import { EditDeviceDialog } from "@/app/configuration/dialog/edit-device-dialog";
 import { Plus } from "lucide-react";
-import { AddDeviceDialog } from "@/app/configuration/dialog/add-device-dialog";
+import { AddUserDialog } from "@/app/configuration/user/add-user-dialog";
+import { EditUserDialog } from "@/app/configuration/user/edit-user-dialog";
+import { DeleteUserDialog } from "@/app/configuration/user/delete-user-dialog";
 
-type DeviceData = {
-	device_name: string;
-	mac_address: string;
-	location: string;
+type UserData = {
+	user_id: string;
+	username: string;
+	email: string;
+	role: string;
 	status: string;
-	tempMin: number;
-	tempMax: number;
-	humidMin: number;
-	humidMax: number;
+	created_at: string;
+	last_login?: string;
 };
 
 type PaginationInfo = {
@@ -58,28 +57,20 @@ type PaginationInfo = {
 	pages: number;
 };
 
-export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
-	const [data, setData] = useState<DeviceData[]>([]);
-	const [selectedDevice, setSelectedDevice] = useState<{
-		mac: string;
-		name: string;
-		location: string;
+export default function UserAccessTable({ isAdmin }: { isAdmin: boolean }) {
+	const [data, setData] = useState<UserData[]>([]);
+	const [selectedUser, setSelectedUser] = useState<{
+		id: string;
+		username: string;
+		email: string;
+		role: string;
 		status: string;
-		thresholds?: {
-			temperature?: { min: number; max: number };
-			humidity?: { min: number; max: number };
-			pressure?: { min: number; max: number };
-		};
 	}>({
-		mac: "",
-		name: "",
-		location: "",
+		id: "",
+		username: "",
+		email: "",
+		role: "",
 		status: "",
-		thresholds: {
-			temperature: { min: 0, max: 0 },
-			humidity: { min: 0, max: 0 },
-			pressure: { min: 0, max: 0 },
-		},
 	});
 
 	const [pagination, setPagination] = useState<PaginationInfo>({
@@ -94,7 +85,7 @@ export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
 		setLoading(true);
 		try {
 			const res = await axios.get(
-				import.meta.env.VITE_API_BASE_URL + "/devices",
+				import.meta.env.VITE_API_BASE_URL + "/users",
 				{
 					params: {
 						page: pagination.page,
@@ -123,58 +114,63 @@ export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
 
 	const [openDialog, setOpenDialog] = useState(false);
 	const [editDialog, setEditDialog] = useState(false);
-	const handleDelete = async (mac: string) => {
+
+	const handleDelete = async (userId: string) => {
 		try {
 			await axios.delete(
-				`${import.meta.env.VITE_API_BASE_URL}/devices/${mac}`
+				`${import.meta.env.VITE_API_BASE_URL}/users/${userId}`
 			);
 			await fetchData();
 			toast.success(
-				`${selectedDevice.name} successfully removed from the system`
+				`${selectedUser.username} successfully removed from the system`
 			);
 		} catch (err) {
 			console.error("Delete error:", err);
 			toast.error("Delete Failed");
 		}
 	};
+
 	const [addDialogOpen, setAddDialogOpen] = useState(false);
-	const [newDevice, setNewDevice] = useState({
-		mac: "",
-		name: "",
-		location: "",
+	const [newUser, setNewUser] = useState({
+		username: "",
+		email: "",
+		password: "",
+		role: "User",
 		status: "Active",
 	});
 
 	const handleAddSubmit = async () => {
 		try {
 			const payload = {
-				mac_address: newDevice.mac,
-				device_name: newDevice.name,
-				location: newDevice.location,
-				status: newDevice.status,
+				username: newUser.username,
+				email: newUser.email,
+				password: newUser.password,
+				role: newUser.role,
+				status: newUser.status,
 			};
 
 			console.log("Payload to send:", payload);
 			console.log(
 				"API URL:",
-				`${import.meta.env.VITE_API_BASE_URL}/devices`
+				`${import.meta.env.VITE_API_BASE_URL}/users`
 			);
 
 			const response = await axios.post(
-				`${import.meta.env.VITE_API_BASE_URL}/devices`,
+				`${import.meta.env.VITE_API_BASE_URL}/users`,
 				payload
 			);
 
 			console.log("API Response:", response.data);
 
 			await fetchData();
-			toast.success(`${newDevice.name} added successfully`);
+			toast.success(`${newUser.username} added successfully`);
 
 			setAddDialogOpen(false);
-			setNewDevice({
-				mac: "",
-				name: "",
-				location: "",
+			setNewUser({
+				username: "",
+				email: "",
+				password: "",
+				role: "User",
 				status: "Active",
 			});
 		} catch (err) {
@@ -187,6 +183,8 @@ export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
 					toast.error(err.response.data.error || "Invalid data");
 				} else if (err.response?.status === 404) {
 					toast.error("API endpoint not found");
+				} else if (err.response?.status === 409) {
+					toast.error("Username or email already exists");
 				} else {
 					toast.error(`Request failed: ${err.response?.status}`);
 				}
@@ -199,36 +197,34 @@ export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
 
 	const handleEditSubmit = async () => {
 		try {
-			const existingDevice = data.find(
-				(device) =>
-					device.device_name.toLowerCase() ===
-						selectedDevice.name.toLowerCase() &&
-					device.mac_address !== selectedDevice.mac
+			const existingUser = data.find(
+				(user) =>
+					user.username.toLowerCase() ===
+						selectedUser.username.toLowerCase() &&
+					user.user_id !== selectedUser.id
 			);
 
-			if (existingDevice) {
+			if (existingUser) {
 				toast.error(
-					"A device with this name already exists. Please choose a different name."
+					"A user with this username already exists. Please choose a different username."
 				);
 				return;
 			}
 
 			const payload = {
-				name: selectedDevice.name,
-				location: selectedDevice.location,
-				status: selectedDevice.status,
-				thresholds: selectedDevice.thresholds,
+				username: selectedUser.username,
+				email: selectedUser.email,
+				role: selectedUser.role,
+				status: selectedUser.status,
 			};
 
 			await axios.put(
-				`${import.meta.env.VITE_API_BASE_URL}/devices/${
-					selectedDevice.mac
-				}`,
+				`${import.meta.env.VITE_API_BASE_URL}/users/${selectedUser.id}`,
 				payload
 			);
 
 			await fetchData();
-			toast.success(`${selectedDevice.name} updated successfully`);
+			toast.success(`${selectedUser.username} updated successfully`);
 			setEditDialog(false);
 		} catch (err) {
 			console.error("Update error:", err);
@@ -244,15 +240,15 @@ export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
 					(status === 409 || status === 400) &&
 					(message.toLowerCase().includes("duplicate") ||
 						message.toLowerCase().includes("already exists") ||
-						message.toLowerCase().includes("name"))
+						message.toLowerCase().includes("username"))
 				) {
 					toast.error(
-						"A device with this name already exists. Please choose a different name."
+						"A user with this username already exists. Please choose a different username."
 					);
 				} else if (status === 404) {
-					toast.error("Device not found");
+					toast.error("User not found");
 				} else {
-					toast.error("Failed to update device");
+					toast.error("Failed to update user");
 				}
 			} else {
 				toast.error("Network error - please check your connection");
@@ -260,18 +256,46 @@ export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
 		}
 	};
 
+	const formatDate = (dateString?: string) => {
+		if (!dateString) return "Never";
+		return new Date(dateString).toLocaleDateString("en-US", {
+			year: "numeric",
+			month: "short",
+			day: "numeric",
+			hour: "2-digit",
+			minute: "2-digit",
+		});
+	};
+	const handleUserPasswordUpdate = async (
+		userId: string,
+		newPassword: string
+	) => {
+		try {
+			await axios.put(
+				`${import.meta.env.VITE_API_BASE_URL}/users/${userId}/password`,
+				{ newPassword }
+			);
+			console.log("Password updated successfully");
+		} catch (err) {
+			console.error("Password update error:", err);
+			throw err;
+		}
+	};
+
 	return (
 		<Card className="@container/card flex-1 min-h-[600px] overflow-hidden">
 			<CardHeader>
 				<CardTitle className="flex items-center gap-2">
-					<SquareChartGantt className="w-5 h-5" />
-					Device Setup
+					<Users className="w-5 h-5" />
+					User Access Management
 				</CardTitle>
 				<CardDescription>
 					<span className="hidden @[540px]/card:block">
-						List of all connected devices
+						Manage user accounts and access permissions
 					</span>
-					<span className="@[540px]/card:hidden">Device list</span>
+					<span className="@[540px]/card:hidden">
+						User management
+					</span>
 				</CardDescription>
 
 				<CardAction className="flex flex-col sm:flex-row sm:items-center">
@@ -281,13 +305,13 @@ export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
 						className="h-9"
 						onClick={() => setAddDialogOpen(true)}
 						disabled={!isAdmin}>
-						<Plus className="h-4 w-4" /> Add Device
+						<Plus className="h-4 w-4" /> Add User
 					</Button>
-					<AddDeviceDialog
+					<AddUserDialog
 						open={addDialogOpen}
 						onOpenChange={setAddDialogOpen}
-						device={newDevice}
-						setDevice={setNewDevice}
+						user={newUser}
+						setUser={setNewUser}
 						onSubmit={handleAddSubmit}
 					/>
 				</CardAction>
@@ -297,31 +321,31 @@ export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
 					value="outline"
 					className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
 					<div className="overflow-x-auto rounded-lg border">
-						<Table className="min-w-[600px]">
+						<Table className="min-w-[800px]">
 							<TableHeader className="bg-muted sticky top-0 z-10">
 								<TableRow>
-									<TableHead>Device Name</TableHead>
-									<TableHead>MAC Address</TableHead>
-									<TableHead>Location</TableHead>
+									<TableHead>Username</TableHead>
+									<TableHead>Email</TableHead>
+									<TableHead>Role</TableHead>
 									<TableHead>Status</TableHead>
+									<TableHead>Last Login</TableHead>
 									<TableHead></TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
 								{data.length > 0 ? (
 									data.map((row) => (
-										<TableRow key={row.device_name}>
+										<TableRow key={row.user_id}>
+											<TableCell className="font-medium">
+												{row.username}
+											</TableCell>
+											<TableCell>{row.email}</TableCell>
 											<TableCell>
-												{row.device_name}
+												<Badge variant="secondary">
+													{row.role}
+												</Badge>
 											</TableCell>
 											<TableCell>
-												{row.mac_address}
-											</TableCell>
-											<TableCell>
-												{row.location}
-											</TableCell>
-											<TableCell>
-												{" "}
 												<Badge
 													variant="outline"
 													className={
@@ -342,6 +366,9 @@ export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
 													)}
 												</Badge>
 											</TableCell>
+											<TableCell className="text-sm text-muted-foreground">
+												{formatDate(row.last_login)}
+											</TableCell>
 											<TableCell className="p-0 pr-2 text-right w-[40px]">
 												<DropdownMenu>
 													<DropdownMenuTrigger
@@ -353,6 +380,7 @@ export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
 															<IconDotsVertical />
 														</Button>
 													</DropdownMenuTrigger>
+
 													<DropdownMenuContent
 														align="end"
 														className="w-32">
@@ -361,12 +389,13 @@ export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
 																setEditDialog(
 																	true
 																);
-																setSelectedDevice(
+																setSelectedUser(
 																	{
-																		mac: row.mac_address,
-																		name: row.device_name,
-																		location:
-																			row.location,
+																		id: row.user_id,
+																		username:
+																			row.username,
+																		email: row.email,
+																		role: row.role,
 																		status: row.status,
 																	}
 																);
@@ -374,40 +403,22 @@ export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
 															disabled={!isAdmin}>
 															Edit
 														</DropdownMenuItem>
+
 														<DropdownMenuSeparator />
+
 														<DropdownMenuItem
 															onClick={() => {
 																setOpenDialog(
 																	true
 																);
-																setSelectedDevice(
+																setSelectedUser(
 																	{
-																		mac: row.mac_address,
-																		name: row.device_name,
-																		location:
-																			row.location,
+																		id: row.user_id,
+																		username:
+																			row.username,
+																		email: row.email,
+																		role: row.role,
 																		status: row.status,
-																		thresholds:
-																			{
-																				temperature:
-																					{
-																						min:
-																							row.tempMin ||
-																							0,
-																						max:
-																							row.tempMax ||
-																							0,
-																					},
-																				humidity:
-																					{
-																						min:
-																							row.humidMin ||
-																							0,
-																						max:
-																							row.humidMax ||
-																							0,
-																					},
-																			},
 																	}
 																);
 															}}
@@ -423,7 +434,7 @@ export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
 								) : (
 									<TableRow>
 										<TableCell
-											colSpan={8}
+											colSpan={6}
 											className="text-center font-medium">
 											{loading
 												? "Loading..."
@@ -433,23 +444,24 @@ export default function DeviceDataTable({ isAdmin }: { isAdmin: boolean }) {
 								)}
 							</TableBody>
 						</Table>
-						<DeleteDeviceDialog
+						<DeleteUserDialog
 							open={openDialog}
 							onOpenChange={setOpenDialog}
-							device={selectedDevice}
+							user={selectedUser}
 							onDelete={handleDelete}
 						/>
-						<EditDeviceDialog
+						<EditUserDialog
 							open={editDialog}
 							onOpenChange={setEditDialog}
-							device={selectedDevice}
-							setDevice={setSelectedDevice}
+							user={selectedUser}
+							setUser={setSelectedUser}
 							onSubmit={handleEditSubmit}
+							onPasswordSubmit={handleUserPasswordUpdate}
 						/>
 					</div>
 					<div className="flex items-center justify-between">
 						<div className="text-muted-foreground text-sm">
-							{pagination.total} row(s) found.
+							{pagination.total} user(s) found.
 						</div>
 
 						<div className="flex items-center gap-1 flex-wrap">

@@ -12,8 +12,18 @@ import {
 	SidebarProvider,
 	SidebarTrigger,
 } from "@/components/ui/sidebar";
+import {
+	Card,
+	CardHeader,
+	CardTitle,
+	CardContent,
+	CardDescription,
+} from "@/components/ui/card";
 import { ModeToggle } from "@/components/mode-toggle";
-export default function Alerts() {
+import { AndonCard } from "@/components/andon-card";
+import { Zap } from "lucide-react";
+
+export default function Andon() {
 	return (
 		<SidebarProvider>
 			<AppSidebar />
@@ -32,14 +42,29 @@ export default function Alerts() {
 								</BreadcrumbItem>
 								<BreadcrumbSeparator className="hidden md:block" />
 								<BreadcrumbItem>
-									<BreadcrumbPage>Alerts</BreadcrumbPage>
+									<BreadcrumbPage>Andon</BreadcrumbPage>
 								</BreadcrumbItem>
 							</BreadcrumbList>
 						</Breadcrumb>
 					</div>
 					<ModeToggle />
 				</header>
-				<div className="flex flex flex-1 justify-center p-6 pt-0"></div>
+				<div className="flex flex flex-1 justify-center p-6 pt-0">
+					<Card className="@container/card flex-1 overflow-hidden">
+						<CardHeader>
+							<CardTitle className="flex items-center gap-2">
+								<Zap className="w-5 h-5" />
+								Andon System
+							</CardTitle>
+							<CardDescription>
+								Live production line monitoring
+							</CardDescription>
+						</CardHeader>
+						<CardContent>
+							<AndonCard />
+						</CardContent>
+					</Card>
+				</div>
 			</SidebarInset>
 		</SidebarProvider>
 	);

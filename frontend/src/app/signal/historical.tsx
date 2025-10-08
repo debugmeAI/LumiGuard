@@ -216,7 +216,7 @@ export default function HistoricalData() {
 								<BreadcrumbSeparator className="hidden md:block" />
 								<BreadcrumbItem>
 									<BreadcrumbPage>
-										Historical Data
+										Historical Logs
 									</BreadcrumbPage>
 								</BreadcrumbItem>
 							</BreadcrumbList>
@@ -230,7 +230,7 @@ export default function HistoricalData() {
 						<CardHeader>
 							<CardTitle className="flex items-center gap-2">
 								<CalendarIcon className="w-5 h-5" />
-								Historical Data
+								Historical Logs
 							</CardTitle>
 							<CardDescription>
 								Analyze machine performance data

@@ -14,8 +14,18 @@ import {
 } from "@/components/ui/sidebar";
 import { ModeToggle } from "@/components/mode-toggle";
 import DeviceDataTable from "@/components/device-table";
+import { useState, useEffect } from "react";
 
 export default function DeviceSetup() {
+	const [isAdmin, setIsAdmin] = useState(false);
+
+	useEffect(() => {
+		const storedUser = localStorage.getItem("user");
+		if (storedUser) {
+			const user = JSON.parse(storedUser);
+			setIsAdmin(user.role === "Admin");
+		}
+	}, []);
 	return (
 		<SidebarProvider>
 			<AppSidebar />
@@ -44,7 +54,7 @@ export default function DeviceSetup() {
 					<ModeToggle />
 				</header>
 				<div className="flex flex-1 justify-center p-6 pt-0">
-					<DeviceDataTable />
+					<DeviceDataTable isAdmin={isAdmin} />
 				</div>
 			</SidebarInset>
 		</SidebarProvider>

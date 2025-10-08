@@ -129,7 +129,7 @@ export function OEECard({
 					className={`rounded-xl p-6 h-full flex flex-col justify-between ${status.bg} ${status.border} transition-all duration-300 hover:shadow-md`}>
 					<div>
 						<div className="flex items-center justify-between mb-13">
-							<span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+							<span className="text-sm font-medium">
 								Availability OEE
 							</span>
 							<Badge variant="outline" className={status.color}>
@@ -144,7 +144,7 @@ export function OEECard({
 					</div>
 					<div>
 						<Progress value={oeeValue} className="h-2 mb-3" />
-						<div className="flex justify-between text-xs text-gray-500 px-1">
+						<div className="flex justify-between text-xs px-1">
 							<span>0%</span>
 							<span className="font-semibold">Target: 85%</span>
 							<span>100%</span>

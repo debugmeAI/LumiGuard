@@ -6,19 +6,19 @@ import Inspect from "vite-plugin-inspect";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
-    plugins: [react(), tailwindcss(), Inspect()],
-    resolve: {
-        alias: {
-            "@": path.resolve(__dirname, "./src"),
-        },
-    },
-    base: mode === "production" ? "/nvrox/" : "/",
-    server: {
-        proxy: {
-            "/socket.io": {
-                target: "http://localhost:3000",
-                ws: true,
-            },
-        },
-    },
+	plugins: [react(), tailwindcss(), Inspect()],
+	resolve: {
+		alias: {
+			"@": path.resolve(__dirname, "./src"),
+		},
+	},
+	base: mode === "production" ? "/lumiguard/" : "/",
+	server: {
+		proxy: {
+			"/socket.io": {
+				target: "http://localhost:3000",
+				ws: true,
+			},
+		},
+	},
 }));

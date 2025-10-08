@@ -167,13 +167,13 @@ export function HistoricalChart({ range = "7days" }: { range?: string }) {
 			<ResponsiveContainer width="100%" height="100%">
 				<ComposedChart
 					data={chartData}
-					margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
+					margin={{ top: 20, right: 10, left: -10, bottom: 0 }}>
 					<CartesianGrid strokeDasharray="3 3" vertical={false} />
 					<XAxis
 						dataKey="date"
 						tickLine={true}
 						axisLine={false}
-						tickMargin={10}
+						tickMargin={15}
 						textAnchor="middle"
 					/>
 					<YAxis

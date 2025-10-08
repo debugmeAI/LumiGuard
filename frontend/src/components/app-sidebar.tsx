@@ -25,8 +25,8 @@ const navData = [
 		url: "#",
 		icon: Gauge,
 		items: [
+			{ title: "Andon", url: "/andon" },
 			{ title: "Overview", url: "/overview" },
-			{ title: "Alerts", url: "/alerts" },
 		],
 	},
 	{

@@ -16,7 +16,9 @@ const clearAllCache = async () => {
 
 	const client = mqtt.connect(brokerUrl, {
 		...options,
-		clientId: `backend_logger_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+		clientId: `backend_logger_${Date.now()}_${Math.floor(
+			Math.random() * 1000
+		)}`,
 	});
 
 	client.on("connect", () => {
@@ -36,32 +38,28 @@ const clearAllCache = async () => {
 
 		try {
 			const data = JSON.parse(message.toString());
-			const { timestamp, mac_address, red, amber, green } = data;
+			const { mac_address, red, amber, green } = data;
+
+			const timestamp = new Date()
+				.toLocaleString("sv-SE")
+				.replace("T", " ")
+				.replaceAll(".", ":");
 
 			const device = await getDeviceId(mac_address);
 			if (!device) {
-				console.warn(`[IGNORED] ${mac_address} not registered or inactive`);
+				console.warn(
+					`[IGNORED] ${mac_address} not registered or inactive`
+				);
 				return;
 			}
 
-			const time = new Date(timestamp);
-			const hour = time.getHours();
-
-			let shift = "";
-			if (hour >= 7 && hour < 19) {
-				shift = "Morning";
-			} else {
-				shift = "Night";
-			}
-
-			await knex("sensor_readings").insert({
-				insert_timestamp: timestamp,
-				mac_address,
-				red_information: red,
-				amber_information: amber,
-				green_information: green,
-				working_shift: shift,
-			});
+			// await knex("sensor_readings").insert({
+			// 	insert_timestamp: timestamp,
+			// 	mac_address,
+			// 	red_information: red,
+			// 	amber_information: amber,
+			// 	green_information: green,
+			// });
 
 			emitToClients("sensor_data", {
 				insert_timestamp: timestamp,
@@ -69,11 +67,10 @@ const clearAllCache = async () => {
 				red_information: red,
 				amber_information: amber,
 				green_information: green,
-				working_shift: shift,
 			});
 
 			console.log(
-				`[SAVED] ${mac_address} | RED ${red} | AMBER ${amber} | GREEN ${green} | SHIFT ${shift}`
+				`[SAVED] ${mac_address} | RED ${red} | AMBER ${amber} | GREEN ${green}`
 			);
 		} catch (err) {
 			console.error("[ERROR] handling message:", err.message);

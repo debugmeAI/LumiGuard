@@ -17,7 +17,7 @@ exports.seed = async function (knex) {
 		},
 		{
 			device_name: "LG-002",
-			mac_address: "B8:27:EB:12:34:56",
+			mac_address: "84:CC:A8:12:9F:32",
 			location: "Auto Label Machine 02",
 			status: "Inactive",
 			created_at: now,
