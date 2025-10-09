@@ -195,7 +195,6 @@ export default function HistoricalData() {
 
 	const dateData: DatePerformance[] = data?.per_date || [];
 	const [openStart, setOpenStart] = useState(false);
-	const [openEnd, setOpenEnd] = useState(false);
 
 	return (
 		<SidebarProvider>
@@ -245,63 +244,60 @@ export default function HistoricalData() {
 												<Button
 													variant="outline"
 													className="justify-start text-left w-full sm:w-auto">
-													{startDate
+													{startDate && endDate
+														? `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`
+														: startDate
 														? startDate.toLocaleDateString()
-														: "Start Date"}
-													<CalendarIcon className="ml-2 h-4 w-4 justify-end" />
-												</Button>
-											</PopoverTrigger>
-											<PopoverContent
-												className="w-auto p-0"
-												align="start">
-												<Calendar
-													mode="single"
-													selected={
-														startDate || undefined
-													}
-													onSelect={(date) => {
-														if (date) {
-															setStartDate(date);
-															setOpenStart(false);
-														}
-													}}
-													initialFocus
-												/>
-											</PopoverContent>
-										</Popover>
-
-										<span className="hidden sm:flex items-center text-sm text-muted-foreground">
-											to
-										</span>
-										<Popover
-											open={openEnd}
-											onOpenChange={setOpenEnd}>
-											<PopoverTrigger asChild>
-												<Button
-													variant="outline"
-													className="justify-start text-left w-full sm:w-auto">
-													{endDate
-														? endDate.toLocaleDateString()
-														: "End Date"}
-													<CalendarIcon className="ml-2 h-4 w-4 justify-end" />
+														: "Select Date Range"}
+													<CalendarIcon className="ml-2 h-4 w-4" />
 												</Button>
 											</PopoverTrigger>
 											<PopoverContent
 												className="w-auto p-0"
 												align="end">
 												<Calendar
-													mode="single"
-													selected={
-														endDate || undefined
-													}
-													onSelect={(date) => {
-														if (date) {
-															setEndDate(date);
-															setOpenEnd(false);
+													mode="range"
+													selected={{
+														from:
+															startDate ||
+															undefined,
+														to:
+															endDate ||
+															undefined,
+													}}
+													onSelect={(range) => {
+														if (range?.from) {
+															setStartDate(
+																range.from
+															);
+														}
+														if (range?.to) {
+															setEndDate(
+																range.to
+															);
+														}
+														if (
+															range?.from &&
+															range?.to
+														) {
+															setOpenStart(false);
 														}
 													}}
+													numberOfMonths={2}
 													initialFocus
 												/>
+												<div className="p-2 flex justify-end">
+													<Button
+														variant="ghost"
+														size="sm"
+														className="h-8 text-sm"
+														onClick={() => {
+															setStartDate(null);
+															setEndDate(null);
+														}}>
+														Reset
+													</Button>
+												</div>
 											</PopoverContent>
 										</Popover>
 
