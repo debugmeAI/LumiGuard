@@ -276,12 +276,6 @@ export default function HistoricalData() {
 																range.to
 															);
 														}
-														if (
-															range?.from &&
-															range?.to
-														) {
-															setOpenStart(false);
-														}
 													}}
 													numberOfMonths={2}
 													initialFocus
