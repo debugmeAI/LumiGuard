@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Radio, MapPin, Clock, Zap, Loader2 } from "lucide-react";
+import { Radio, MapPin, Clock, Zap, Loader2, WifiOff } from "lucide-react";
 import { useAndonSocket } from "./andon-socket";
 
 interface Device {
@@ -77,6 +77,7 @@ export function AndonCard() {
 					{devices.map((device) => {
 						const status = deviceStatus[device.mac_address];
 						const isActive = status !== undefined;
+						const isOnline = isActive && status.isOnline;
 						const isRed = isActive && status.red === 1;
 						const isAmber = isActive && status.amber === 1;
 						const isGreen = isActive && status.green === 1;
@@ -85,7 +86,9 @@ export function AndonCard() {
 							<Card
 								key={device.mac_address}
 								className={`group relative overflow-hidden bg-gradient-to-br from-card via-card to-muted/20 border-1 transition-all duration-500 hover:scale-[1.02] ${
-									isRed
+									!isOnline
+										? "border-gray-500/60 shadow-[0_0_30px_rgba(107,114,128,0.3)] opacity-70"
+										: isRed
 										? "border-red-500/60 shadow-[0_0_50px_rgba(239,68,68,0.4)] hover:shadow-[0_0_80px_rgba(239,68,68,0.6)]"
 										: isAmber
 										? "border-amber-500/60 shadow-[0_0_50px_rgba(245,158,11,0.4)] hover:shadow-[0_0_80px_rgba(245,158,11,0.6)]"
@@ -96,21 +99,25 @@ export function AndonCard() {
 								<div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full opacity-50 group-hover:scale-150 transition-transform duration-700" />
 								<div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-primary/5 to-transparent rounded-tr-full opacity-30" />
 
-								{isRed && (
+								{!isOnline && (
+									<div className="absolute inset-0 bg-gradient-to-br from-gray-900/40 via-transparent to-transparent" />
+								)}
+
+								{isOnline && isRed && (
 									<>
 										<div className="absolute inset-0 bg-gradient-to-br from-red-500/20 via-transparent to-transparent animate-pulse" />
 										<div className="absolute -top-24 -right-24 w-48 h-48 bg-red-500/30 rounded-full blur-3xl animate-pulse" />
 										<div className="absolute -bottom-24 -left-24 w-48 h-48 bg-red-500/20 rounded-full blur-3xl animate-pulse" />
 									</>
 								)}
-								{isAmber && (
+								{isOnline && isAmber && (
 									<>
 										<div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 via-transparent to-transparent animate-pulse" />
 										<div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/30 rounded-full blur-3xl animate-pulse" />
 										<div className="absolute -bottom-24 -left-24 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl animate-pulse" />
 									</>
 								)}
-								{isGreen && (
+								{isOnline && isGreen && (
 									<>
 										<div className="absolute -top-24 -right-24 w-48 h-48 bg-green-500/20 rounded-full blur-3xl" />
 										<div className="absolute -bottom-24 -left-24 w-48 h-48 bg-green-500/15 rounded-full blur-3xl" />
@@ -122,8 +129,14 @@ export function AndonCard() {
 										<div className="space-y-2">
 											<div className="flex items-center gap-2">
 												<div
-													className={`w-4 h-2 rounded-sm animate-pulse ${
-														isRed
+													className={`w-4 h-2 rounded-sm ${
+														isOnline
+															? "animate-pulse"
+															: ""
+													} ${
+														!isOnline
+															? "bg-gray-500"
+															: isRed
 															? "bg-red-500"
 															: isAmber
 															? "bg-amber-500"
@@ -142,25 +155,35 @@ export function AndonCard() {
 											</div>
 										</div>
 
-										{isActive && (
+										{isOnline ? (
 											<Badge className="relative overflow-hidden bg-transparent text-white-500">
 												<Zap className="w-4 h-4 mr-1" />
 												<span className="text-sm">
 													LIVE
 												</span>
 											</Badge>
+										) : (
+											<Badge className="relative overflow-hidden bg-transparent text-white-500">
+												<WifiOff className="w-4 h-4 mr-1" />
+												<span className="text-sm">
+													OFFLINE
+												</span>
+											</Badge>
 										)}
 									</div>
+
 									<div className="flex justify-between items-center space-x-3">
 										<div className="flex-1 flex flex-col items-center">
 											<div className="relative">
 												<div
 													className={`w-14 h-14 rounded-md transition-all duration-300 ${
-														isRed
+														isOnline && isRed
 															? "bg-gradient-to-br from-red-400 to-red-600 shadow-[0_0_30px_rgba(239,68,68,1)] animate-pulse"
+															: isRed
+															? "bg-gradient-to-br from-red-700/70 to-red-800/70 shadow-inner opacity-50"
 															: "bg-gradient-to-br from-red-950/50 to-red-900/30 shadow-inner"
 													}`}>
-													{isRed && (
+													{isOnline && isRed && (
 														<>
 															<div className="absolute inset-0 rounded-full bg-red-500 blur-2xl animate-pulse opacity-60" />
 															<div className="absolute inset-2 rounded-full bg-red-300 blur-sm" />
@@ -171,7 +194,9 @@ export function AndonCard() {
 											<span
 												className={`mt-2 text-xs font-bold tracking-wider ${
 													isRed
-														? "text-red-500"
+														? isOnline
+															? "text-red-500"
+															: "text-red-500/50"
 														: "text-muted"
 												}`}>
 												ERROR
@@ -181,11 +206,13 @@ export function AndonCard() {
 											<div className="relative">
 												<div
 													className={`w-14 h-14 rounded-md transition-all duration-300 ${
-														isAmber
+														isOnline && isAmber
 															? "bg-gradient-to-br from-amber-400 to-amber-600 shadow-[0_0_30px_rgba(245,158,11,1)] animate-pulse"
+															: isAmber
+															? "bg-gradient-to-br from-amber-700/70 to-amber-800/70 shadow-inner opacity-50"
 															: "bg-gradient-to-br from-amber-950/50 to-amber-900/30 shadow-inner"
 													}`}>
-													{isAmber && (
+													{isOnline && isAmber && (
 														<>
 															<div className="absolute inset-0 rounded-full bg-amber-500 blur-2xl animate-pulse opacity-60" />
 															<div className="absolute inset-2 rounded-full bg-amber-300 blur-sm" />
@@ -196,7 +223,9 @@ export function AndonCard() {
 											<span
 												className={`mt-2 text-xs font-bold tracking-wider ${
 													isAmber
-														? "text-amber-500"
+														? isOnline
+															? "text-amber-500"
+															: "text-amber-500/50"
 														: "text-muted"
 												}`}>
 												IDLE
@@ -206,11 +235,13 @@ export function AndonCard() {
 											<div className="relative">
 												<div
 													className={`w-14 h-14 rounded-md transition-all duration-300 ${
-														isGreen
+														isOnline && isGreen
 															? "bg-gradient-to-br from-green-400 to-green-600 shadow-[0_0_30px_rgba(34,197,94,1)]"
+															: isGreen
+															? "bg-gradient-to-br from-green-700/70 to-green-800/70 shadow-inner opacity-50"
 															: "bg-gradient-to-br from-green-950/50 to-green-900/30 shadow-inner"
 													}`}>
-													{isGreen && (
+													{isOnline && isGreen && (
 														<>
 															<div className="absolute inset-0 rounded-full bg-green-500 blur-2xl opacity-50" />
 															<div className="absolute inset-2 rounded-full bg-green-300 blur-sm" />
@@ -221,16 +252,18 @@ export function AndonCard() {
 											<span
 												className={`mt-2 text-xs font-bold tracking-wider ${
 													isGreen
-														? "text-green-500"
+														? isOnline
+															? "text-green-500"
+															: "text-green-500/50"
 														: "text-muted"
 												}`}>
 												RUN
 											</span>
 										</div>
 									</div>
+
 									<div className="space-y-2">
 										<div className="flex items-center justify-between px-4 py-1.5 rounded-lg bg-muted/50 text-sm">
-											{/* Kiri: Icon + MAC address */}
 											<div className="flex items-center gap-2 text-muted-foreground">
 												<Radio className="w-3.5 h-3.5" />
 												<span className="font-mono">
@@ -238,22 +271,26 @@ export function AndonCard() {
 												</span>
 											</div>
 
-											{/* Kanan: Status */}
-											{isActive ? (
-												<div className="flex items-center gap-2 text-muted-foreground">
-													<Clock className="w-3.5 h-3.5" />
-													<span className="font-mono">
-														{formatTimestamp(
-															status.timestamp
-														)}
-													</span>
-												</div>
+											{isOnline ? (
+												isActive && status.timestamp ? (
+													<div className="flex items-center gap-2 text-muted-foreground">
+														<Clock className="w-3.5 h-3.5" />
+														<span className="font-mono">
+															{formatTimestamp(
+																status.timestamp
+															)}
+														</span>
+													</div>
+												) : (
+													<div className="flex items-center gap-2 text-xs text-green-400">
+														<div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+														<span>Connected</span>
+													</div>
+												)
 											) : (
-												<div className="flex items-center gap-2 text-xs text-muted-foreground px-2">
-													<div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-pulse" />
-													<span>
-														Device Not Active
-													</span>
+												<div className="flex items-center gap-2 text-xs text-red-400 px-2">
+													<div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+													<span>Connection Lost</span>
 												</div>
 											)}
 										</div>

@@ -115,7 +115,8 @@ export function LoginForm({
 
 			<footer className="text-center text-sm text-muted-foreground pb-6">
 				<p>
-					© {new Date().getFullYear()} LumiGuard. All rights reserved.
+					© {new Date().getFullYear()} PT. SMT Indonesia | All rights
+					reserved
 				</p>
 			</footer>
 		</form>

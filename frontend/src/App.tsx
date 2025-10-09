@@ -22,6 +22,14 @@ function ProtectedRoute({
 	return children;
 }
 
+function PublicRoute({ children }: { children: ReactElement }): ReactElement {
+	const user = localStorage.getItem("user");
+	if (user) {
+		return <Navigate to="/andon" replace />;
+	}
+	return children;
+}
+
 function RootRedirect(): ReactElement {
 	const user = localStorage.getItem("user");
 	return user ? (
@@ -37,7 +45,14 @@ function App(): ReactElement {
 			<Toaster position="top-center" />
 			<Routes>
 				<Route path="/" element={<RootRedirect />} />
-				<Route path="login" element={<LoginPage />} />
+				<Route
+					path="login"
+					element={
+						<PublicRoute>
+							<LoginPage />
+						</PublicRoute>
+					}
+				/>
 				<Route
 					path="overview"
 					element={
@@ -86,6 +101,7 @@ function App(): ReactElement {
 						</ProtectedRoute>
 					}
 				/>
+				<Route path="*" element={<Navigate to="/" replace />} />
 			</Routes>
 		</ThemeProvider>
 	);

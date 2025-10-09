@@ -62,8 +62,8 @@ export function AboutDialog() {
 								</a>
 							</p>
 							<p className="text-sm text-muted-foreground">
-								© {new Date().getFullYear()} LumiGuard. All
-								rights reserved.
+								© {new Date().getFullYear()} PT. SMT Indonesia |
+								All rights reserved
 							</p>
 						</div>
 					</DialogDescription>
