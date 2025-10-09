@@ -44,7 +44,7 @@ export function EditDeviceDialog({
 }: Props) {
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-sm">
+			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
 					<DialogTitle>Edit Device</DialogTitle>
 					<DialogDescription>
@@ -136,7 +136,7 @@ export function EditDeviceDialog({
 						<DialogClose asChild>
 							<Button variant="outline">Cancel</Button>
 						</DialogClose>
-						<Button type="submit">Save</Button>
+						<Button type="submit">Save Changes</Button>
 					</DialogFooter>
 				</form>
 			</DialogContent>

@@ -117,7 +117,7 @@ export function EditUserDialog({
 				<DialogHeader>
 					<DialogTitle>Edit User</DialogTitle>
 					<DialogDescription>
-						Update user account settings and permissions.
+						Configure user account settings.
 					</DialogDescription>
 				</DialogHeader>
 

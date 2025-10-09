@@ -128,7 +128,7 @@ export function AddUserDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-sm">
+			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
 					<DialogTitle>Add New User</DialogTitle>
 					<DialogDescription>
