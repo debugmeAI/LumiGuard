@@ -27,7 +27,7 @@ interface DeviceStatus {
 	};
 }
 
-const SOCKET_URL = import.meta.env.VITE_SOCKER_URL;
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 const HEARTBEAT_TIMEOUT = 10000;
 
 export const useAndonSocket = () => {

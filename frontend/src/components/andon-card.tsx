@@ -85,16 +85,24 @@ export function AndonCard() {
 						return (
 							<Card
 								key={device.mac_address}
-								className={`group relative overflow-hidden bg-gradient-to-br from-card via-card to-muted/20 border-1 transition-all duration-500 hover:scale-[1.02] ${
+								className={`group relative overflow-hidden bg-gradient-to-br from-card via-card to-muted/20 border-1 transition-all duration-500 ${
 									!isOnline
-										? "border-gray-500/60 shadow-[0_0_30px_rgba(107,114,128,0.3)] opacity-70"
+										? "border-gray-500/60 "
 										: isRed
-										? "border-red-500/60 shadow-[0_0_50px_rgba(239,68,68,0.4)] hover:shadow-[0_0_80px_rgba(239,68,68,0.6)]"
+										? "border-red-500/60"
 										: isAmber
-										? "border-amber-500/60 shadow-[0_0_50px_rgba(245,158,11,0.4)] hover:shadow-[0_0_80px_rgba(245,158,11,0.6)]"
+										? "border-amber-500/60"
 										: isGreen
-										? "border-green-500/60 shadow-[0_0_50px_rgba(34,197,94,0.3)] hover:shadow-[0_0_80px_rgba(34,197,94,0.5)]"
-										: "border-border hover:shadow-2xl"
+										? "border-green-500/60"
+										: "border-border"
+									// ? "border-gray-500/60 shadow-[0_0_30px_rgba(107,114,128,0.3)] opacity-70"
+									// : isRed
+									// ? "border-red-500/60 shadow-[0_0_50px_rgba(239,68,68,0.4)] hover:shadow-[0_0_80px_rgba(239,68,68,0.6)]"
+									// : isAmber
+									// ? "border-amber-500/60 shadow-[0_0_50px_rgba(245,158,11,0.4)] hover:shadow-[0_0_80px_rgba(245,158,11,0.6)]"
+									// : isGreen
+									// ? "border-green-500/60 shadow-[0_0_50px_rgba(34,197,94,0.3)] hover:shadow-[0_0_80px_rgba(34,197,94,0.5)]"
+									// : "border-border hover:shadow-2xl"
 								}`}>
 								<div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full opacity-50 group-hover:scale-150 transition-transform duration-700" />
 								<div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-primary/5 to-transparent rounded-tr-full opacity-30" />
