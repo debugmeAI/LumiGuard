@@ -26,48 +26,45 @@ export function AboutDialog() {
 					About
 				</DropdownMenuItem>
 			</DialogTrigger>
-			<DialogContent className="max-w-lg p-6 rounded-lg shadow-lg">
+			<DialogContent className="max-w-lg p-6 rounded-lg">
 				<DialogHeader>
-					<DialogTitle className="text-2xl font-semibold flex items-center gap-2">
-						<IconAlignBoxRightStretch className="!size-5 text-primary" />
-						<span className="text-base font-bold">LumiGuard</span>
+					<DialogTitle className="font-semibold flex items-center gap-2">
+						<IconAlignBoxRightStretch className="!size-5" />
+						<span className="text-md font-bold">LumiGuard</span>
 						<span className="text-xs text-muted-foreground">
 							/ˈluː.mi.ɡɑːrd/
 						</span>
 					</DialogTitle>
-					<DialogDescription className="text-base text-muted-foreground mt-4">
-						<div className="space-y-4">
+					<DialogDescription className="text-sm text-muted-foreground mt-6">
+						<div>
 							<p>
-								<strong>Version:</strong> 1.0.0
+								Real-time monitoring and management platform for
+								industrial tower lights and OEE performance
+								calculation.
+							</p>
+						</div>
+						<div className="mt-6 space-y-1">
+							<p>
+								<strong>Built with care by</strong> Gilang Fauzi
 							</p>
 							<p>
-								LumiGuard is a state-of-the-art platform
-								designed to deliver real-time monitoring and
-								management for industrial tower lights and line
-								status indicators. Leveraging modern web and IoT
-								technologies, it provides a seamless and
-								intuitive experience for tracking, analyzing,
-								and responding to machine and production line
-								signals in connected systems.
-							</p>
-							<p>
-								<strong>Developed by:</strong> Gilang Fauzi
-							</p>
-							<p>
-								<strong>Contact:</strong>{" "}
+								<strong>Reach out at</strong>{" "}
 								<a
 									href="mailto:gilang.fauzi@smt.co.id"
 									className="text-primary hover:underline">
 									gilang.fauzi@smt.co.id
 								</a>
 							</p>
-							<p className="text-sm text-muted-foreground">
-								© {new Date().getFullYear()} PT. SMT Indonesia |
-								All rights reserved
-							</p>
 						</div>
 					</DialogDescription>
 				</DialogHeader>
+				<footer className="mt-4 text-sm text-muted-foreground">
+					© {new Date().getFullYear()} PT. SMT Indonesia | All rights
+					reserved
+					<p>
+						<strong>Version </strong> 1.0.0
+					</p>
+				</footer>
 			</DialogContent>
 		</Dialog>
 	);
