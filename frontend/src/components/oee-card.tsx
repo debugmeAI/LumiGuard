@@ -68,7 +68,7 @@ export function OEECard({
 	const downtimePercentage =
 		totalTime > 0 ? (downtimeSeconds / totalTime) * 100 : 0;
 	const unknownPercentage =
-		totalTime > 0 ? (unknownSeconds / totalTime) * 100 : 0;
+		totalTime > 0 ? (unknownSeconds / plannedSeconds) * 100 : 0;
 
 	const utilizationPercentage =
 		plannedSeconds > 0 ? (totalOperatingSeconds / plannedSeconds) * 100 : 0;
@@ -166,7 +166,7 @@ export function OEECard({
 										Run Time
 									</div>
 									<div className="text-sm text-gray-600 dark:text-gray-400">
-										{runPercentage.toFixed(2)}% of planned
+										{runPercentage.toFixed(2)}% of operating
 										time
 									</div>
 								</div>
@@ -197,7 +197,7 @@ export function OEECard({
 									</div>
 									<div className="text-sm text-gray-600 dark:text-gray-400">
 										{downtimePercentage.toFixed(2)}% of
-										planned time
+										operating time
 									</div>
 								</div>
 							</div>

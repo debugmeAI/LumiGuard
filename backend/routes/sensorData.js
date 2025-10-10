@@ -342,7 +342,7 @@ router.get("/summary", async (req, res) => {
 
 		const processed = processData(rawData);
 
-		const calculatePercentages = (item) => {
+		const calculatePercentages = (item, plannedSeconds = 0) => {
 			const active =
 				(parseFloat(item.red_seconds) || 0) +
 				(parseFloat(item.amber_seconds) || 0) +
@@ -360,10 +360,13 @@ router.get("/summary", async (req, res) => {
 				red_percent: ((item.red_seconds / active) * 100).toFixed(2),
 				amber_percent: ((item.amber_seconds / active) * 100).toFixed(2),
 				green_percent: ((item.green_seconds / active) * 100).toFixed(2),
-				unknown_percent: (
-					(item.unknown_seconds / active) *
-					100
-				).toFixed(2),
+				unknown_percent:
+					plannedSeconds > 0
+						? (
+								(item.unknown_seconds / plannedSeconds) *
+								100
+						  ).toFixed(2)
+						: "0.00",
 			};
 		};
 
@@ -412,7 +415,10 @@ router.get("/summary", async (req, res) => {
 				: plannedNight
 			: plannedMorning + plannedNight;
 
-		const totalWithPerc = calculatePercentages(processed.total);
+		const totalWithPerc = calculatePercentages(
+			processed.total,
+			totalPlanned
+		);
 		const greenSec = parseFloat(processed.total.green_seconds) || 0;
 		const oee =
 			totalPlanned > 0
@@ -435,7 +441,6 @@ router.get("/summary", async (req, res) => {
 		const perDevice = [];
 		Object.values(processed.devices).forEach((device) => {
 			Object.values(device.shifts).forEach((shiftData) => {
-				const withPercentages = calculatePercentages(shiftData);
 				const key = `${shiftData.shift_date}_${shiftData.calculated_shift}`;
 				const ts = device.shifts[key]?.timestamps || [];
 				const planned = calculatePlannedTime(
@@ -448,6 +453,10 @@ router.get("/summary", async (req, res) => {
 					planned.seconds > 0
 						? ((green / planned.seconds) * 100).toFixed(2)
 						: "0.00";
+				const withPercentages = calculatePercentages(
+					shiftData,
+					planned.seconds
+				);
 				perDevice.push({
 					...withPercentages,
 					mac_address: device.mac_address,
@@ -473,7 +482,7 @@ router.get("/summary", async (req, res) => {
 					? ((green / planned.seconds) * 100).toFixed(2)
 					: "0.00";
 			return {
-				...calculatePercentages(shiftData),
+				...calculatePercentages(shiftData, planned.seconds),
 				planned_production_seconds: planned.seconds.toString(),
 				availability_oee: oeeShift,
 				shift_type: planned.type,
@@ -1357,10 +1366,11 @@ router.get("/summary-history", async (req, res) => {
 					? ((results.total.green_seconds / active) * 100).toFixed(2)
 					: "0.00";
 			const unknownPerc =
-				active > 0
-					? ((results.total.unknown_seconds / active) * 100).toFixed(
-							2
-					  )
+				totalPlanned > 0
+					? (
+							(results.total.unknown_seconds / totalPlanned) *
+							100
+					  ).toFixed(2)
 					: "0.00";
 
 			let shiftTypeLabel = "No Data";
@@ -1433,6 +1443,8 @@ router.get("/summary-history", async (req, res) => {
 		}
 
 		const activeTotal = parseFloat(totalAggregate.total_seconds) || 0;
+		const totalPlannedSec =
+			parseFloat(totalAggregate.planned_production_seconds) || 0;
 		const totalRedPerc =
 			activeTotal > 0
 				? (
@@ -1457,17 +1469,15 @@ router.get("/summary-history", async (req, res) => {
 				  ).toFixed(2)
 				: "0.00";
 		const totalUnknownPerc =
-			activeTotal > 0
+			totalPlannedSec > 0
 				? (
 						(parseFloat(totalAggregate.unknown_seconds) /
-							activeTotal) *
+							totalPlannedSec) *
 						100
 				  ).toFixed(2)
 				: "0.00";
 
 		const totalGreenSec = parseFloat(totalAggregate.green_seconds) || 0;
-		const totalPlannedSec =
-			parseFloat(totalAggregate.planned_production_seconds) || 0;
 		const totalOEE =
 			totalPlannedSec > 0
 				? ((totalGreenSec / totalPlannedSec) * 100).toFixed(2)
