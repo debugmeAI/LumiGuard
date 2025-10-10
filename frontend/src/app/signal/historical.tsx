@@ -174,7 +174,6 @@ export default function HistoricalData() {
 			setData(result);
 			setLoading(false);
 
-			// Delay untuk menampilkan data setelah loading
 			setTimeout(() => {
 				setShowData(true);
 			}, 1000);
@@ -204,7 +203,7 @@ export default function HistoricalData() {
 						<SidebarTrigger />
 						<Separator
 							orientation="vertical"
-							className="mr-2 h-4"
+							className="mr-2 data-[orientation=vertical]:h-4"
 						/>
 						<Breadcrumb>
 							<BreadcrumbList>
