@@ -87,12 +87,16 @@ router.get("/summary", async (req, res) => {
 
 		const detectOvertimeFromTimestamps = (timestamps, shiftType) => {
 			if (!timestamps || timestamps.length === 0) return false;
+
 			if (shiftType === "Morning") {
-				return timestamps.some((ts) => new Date(ts).getHours() >= 16);
+				return timestamps.some((ts) => {
+					const hour = new Date(ts).getHours();
+					return hour >= 16;
+				});
 			} else if (shiftType === "Night") {
 				return timestamps.some((ts) => {
-					const h = new Date(ts).getHours();
-					return h >= 4 && h < 7;
+					const hour = new Date(ts).getHours();
+					return hour >= 4 && hour < 7;
 				});
 			}
 			return false;
@@ -105,18 +109,6 @@ router.get("/summary", async (req, res) => {
 		) => {
 			const date = new Date(dateString);
 			const isFriday = date.getDay() === 5;
-			let normalHours = 8;
-			let overtimeHours = 10.5;
-
-			if (isFriday) {
-				if (shiftType === "Morning") {
-					normalHours = 10;
-					overtimeHours = 10;
-				} else if (shiftType === "Night") {
-					normalHours = 10.5;
-					overtimeHours = 10.5;
-				}
-			}
 
 			const hasOvertime = detectOvertimeFromTimestamps(
 				timestamps,
@@ -124,53 +116,62 @@ router.get("/summary", async (req, res) => {
 			);
 
 			if (shiftType === "Morning") {
-				const hours =
-					hasOvertime && !isFriday ? overtimeHours : normalHours;
-				return {
-					seconds: hours * 3600,
-					type: `${
-						hasOvertime && !isFriday ? "Overtime" : "Normal"
-					} (${hours}h)`,
-				};
-			} else if (shiftType === "Night") {
+				let hours;
 				if (isFriday) {
-					return {
-						seconds: 10.5 * 3600,
-						type: "Jumat Malam (10.5h)",
-					};
+					hours = hasOvertime ? 10 : 8;
+				} else {
+					hours = hasOvertime ? 10.5 : 8;
 				}
-				const hours = hasOvertime ? overtimeHours : normalHours;
-				return {
-					seconds: hours * 3600,
-					type: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`,
-				};
-			} else {
-				const morningTs = timestamps.filter((ts) => {
-					const h = new Date(ts).getHours();
-					return h >= 7 && h < 19;
-				});
-				const nightTs = timestamps.filter((ts) => {
-					const h = new Date(ts).getHours();
-					return h >= 19 || h < 7;
-				});
-
-				const morningHours = isFriday
-					? 10
-					: detectOvertimeFromTimestamps(morningTs, "Morning")
-					? 10.5
-					: 8;
-
-				const nightHours = isFriday
-					? 10.5
-					: detectOvertimeFromTimestamps(nightTs, "Night")
-					? 10.5
-					: 8;
-
-				return {
-					seconds: (morningHours + nightHours) * 3600,
-					type: `Full Day (${morningHours}h + ${nightHours}h)`,
-				};
+				const typeLabel = isFriday
+					? hasOvertime
+						? "Jumat Pagi Overtime (10h)"
+						: "Jumat Pagi Normal (8h)"
+					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
+				return { seconds: hours * 3600, type: typeLabel };
 			}
+
+			if (shiftType === "Night") {
+				const hours = hasOvertime ? 10.5 : 8;
+				const typeLabel = isFriday
+					? hasOvertime
+						? "Jumat Malam Overtime (10.5h)"
+						: "Jumat Malam Normal (8h)"
+					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
+				return { seconds: hours * 3600, type: typeLabel };
+			}
+
+			const morningTs = timestamps.filter((ts) => {
+				const h = new Date(ts).getHours();
+				return h >= 7 && h < 19;
+			});
+			const nightTs = timestamps.filter((ts) => {
+				const h = new Date(ts).getHours();
+				return h >= 19 || h < 7;
+			});
+
+			const morningHasOvertime = detectOvertimeFromTimestamps(
+				morningTs,
+				"Morning"
+			);
+			const nightHasOvertime = detectOvertimeFromTimestamps(
+				nightTs,
+				"Night"
+			);
+
+			let morningHours, nightHours;
+
+			if (isFriday) {
+				morningHours = morningHasOvertime ? 10 : 8;
+				nightHours = nightHasOvertime ? 10.5 : 8;
+			} else {
+				morningHours = morningHasOvertime ? 10.5 : 8;
+				nightHours = nightHasOvertime ? 10.5 : 8;
+			}
+
+			return {
+				seconds: (morningHours + nightHours) * 3600,
+				type: `Full Day (${morningHours}h + ${nightHours}h)`,
+			};
 		};
 
 		const shouldIncludeData = (shiftInfo, requestedShift) => {
@@ -635,12 +636,16 @@ router.get("/summary-range", async (req, res) => {
 
 		const detectOvertimeFromTimestamps = (timestamps, shiftType) => {
 			if (!timestamps || timestamps.length === 0) return false;
+
 			if (shiftType === "Morning") {
-				return timestamps.some((ts) => new Date(ts).getHours() >= 16);
+				return timestamps.some((ts) => {
+					const hour = new Date(ts).getHours();
+					return hour >= 16;
+				});
 			} else if (shiftType === "Night") {
 				return timestamps.some((ts) => {
-					const h = new Date(ts).getHours();
-					return h >= 4 && h < 7;
+					const hour = new Date(ts).getHours();
+					return hour >= 4 && hour < 7;
 				});
 			}
 			return false;
@@ -653,18 +658,6 @@ router.get("/summary-range", async (req, res) => {
 		) => {
 			const date = new Date(dateString);
 			const isFriday = date.getDay() === 5;
-			let normalHours = 8;
-			let overtimeHours = 10.5;
-
-			if (isFriday) {
-				if (shiftType === "Morning") {
-					normalHours = 10;
-					overtimeHours = 10;
-				} else if (shiftType === "Night") {
-					normalHours = 10.5;
-					overtimeHours = 10.5;
-				}
-			}
 
 			const hasOvertime = detectOvertimeFromTimestamps(
 				timestamps,
@@ -672,53 +665,62 @@ router.get("/summary-range", async (req, res) => {
 			);
 
 			if (shiftType === "Morning") {
-				const hours =
-					hasOvertime && !isFriday ? overtimeHours : normalHours;
-				return {
-					seconds: hours * 3600,
-					type: `${
-						hasOvertime && !isFriday ? "Overtime" : "Normal"
-					} (${hours}h)`,
-				};
-			} else if (shiftType === "Night") {
+				let hours;
 				if (isFriday) {
-					return {
-						seconds: 10.5 * 3600,
-						type: "Jumat Malam (10.5h)",
-					};
+					hours = hasOvertime ? 10 : 8;
+				} else {
+					hours = hasOvertime ? 10.5 : 8;
 				}
-				const hours = hasOvertime ? overtimeHours : normalHours;
-				return {
-					seconds: hours * 3600,
-					type: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`,
-				};
-			} else {
-				const morningTs = timestamps.filter((ts) => {
-					const h = new Date(ts).getHours();
-					return h >= 7 && h < 19;
-				});
-				const nightTs = timestamps.filter((ts) => {
-					const h = new Date(ts).getHours();
-					return h >= 19 || h < 7;
-				});
-
-				const morningHours = isFriday
-					? 10
-					: detectOvertimeFromTimestamps(morningTs, "Morning")
-					? 10.5
-					: 8;
-
-				const nightHours = isFriday
-					? 10.5
-					: detectOvertimeFromTimestamps(nightTs, "Night")
-					? 10.5
-					: 8;
-
-				return {
-					seconds: (morningHours + nightHours) * 3600,
-					type: `Full Day (${morningHours}h + ${nightHours}h)`,
-				};
+				const typeLabel = isFriday
+					? hasOvertime
+						? "Jumat Pagi Overtime (10h)"
+						: "Jumat Pagi Normal (8h)"
+					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
+				return { seconds: hours * 3600, type: typeLabel };
 			}
+
+			if (shiftType === "Night") {
+				const hours = hasOvertime ? 10.5 : 8;
+				const typeLabel = isFriday
+					? hasOvertime
+						? "Jumat Malam Overtime (10.5h)"
+						: "Jumat Malam Normal (8h)"
+					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
+				return { seconds: hours * 3600, type: typeLabel };
+			}
+
+			const morningTs = timestamps.filter((ts) => {
+				const h = new Date(ts).getHours();
+				return h >= 7 && h < 19;
+			});
+			const nightTs = timestamps.filter((ts) => {
+				const h = new Date(ts).getHours();
+				return h >= 19 || h < 7;
+			});
+
+			const morningHasOvertime = detectOvertimeFromTimestamps(
+				morningTs,
+				"Morning"
+			);
+			const nightHasOvertime = detectOvertimeFromTimestamps(
+				nightTs,
+				"Night"
+			);
+
+			let morningHours, nightHours;
+
+			if (isFriday) {
+				morningHours = morningHasOvertime ? 10 : 8;
+				nightHours = nightHasOvertime ? 10.5 : 8;
+			} else {
+				morningHours = morningHasOvertime ? 10.5 : 8;
+				nightHours = nightHasOvertime ? 10.5 : 8;
+			}
+
+			return {
+				seconds: (morningHours + nightHours) * 3600,
+				type: `Full Day (${morningHours}h + ${nightHours}h)`,
+			};
 		};
 
 		const now = new Date();
@@ -1113,12 +1115,16 @@ router.get("/summary-history", async (req, res) => {
 
 		const detectOvertimeFromTimestamps = (timestamps, shiftType) => {
 			if (!timestamps || timestamps.length === 0) return false;
+
 			if (shiftType === "Morning") {
-				return timestamps.some((ts) => new Date(ts).getHours() >= 16);
+				return timestamps.some((ts) => {
+					const hour = new Date(ts).getHours();
+					return hour >= 16;
+				});
 			} else if (shiftType === "Night") {
 				return timestamps.some((ts) => {
-					const h = new Date(ts).getHours();
-					return h >= 4 && h < 7;
+					const hour = new Date(ts).getHours();
+					return hour >= 4 && hour < 7;
 				});
 			}
 			return false;
@@ -1131,18 +1137,6 @@ router.get("/summary-history", async (req, res) => {
 		) => {
 			const date = new Date(dateString);
 			const isFriday = date.getDay() === 5;
-			let normalHours = 8;
-			let overtimeHours = 10.5;
-
-			if (isFriday) {
-				if (shiftType === "Morning") {
-					normalHours = 10;
-					overtimeHours = 10;
-				} else if (shiftType === "Night") {
-					normalHours = 10.5;
-					overtimeHours = 10.5;
-				}
-			}
 
 			const hasOvertime = detectOvertimeFromTimestamps(
 				timestamps,
@@ -1150,53 +1144,61 @@ router.get("/summary-history", async (req, res) => {
 			);
 
 			if (shiftType === "Morning") {
-				const hours =
-					hasOvertime && !isFriday ? overtimeHours : normalHours;
-				return {
-					seconds: hours * 3600,
-					type: `${
-						hasOvertime && !isFriday ? "Overtime" : "Normal"
-					} (${hours}h)`,
-				};
-			} else if (shiftType === "Night") {
+				let hours;
 				if (isFriday) {
-					return {
-						seconds: 10.5 * 3600,
-						type: "Jumat Malam (10.5h)",
-					};
+					hours = hasOvertime ? 10 : 8;
+				} else {
+					hours = hasOvertime ? 10.5 : 8;
 				}
-				const hours = hasOvertime ? overtimeHours : normalHours;
-				return {
-					seconds: hours * 3600,
-					type: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`,
-				};
-			} else {
-				const morningTs = timestamps.filter((ts) => {
-					const h = new Date(ts).getHours();
-					return h >= 7 && h < 19;
-				});
-				const nightTs = timestamps.filter((ts) => {
-					const h = new Date(ts).getHours();
-					return h >= 19 || h < 7;
-				});
-
-				const morningHours = isFriday
-					? 10
-					: detectOvertimeFromTimestamps(morningTs, "Morning")
-					? 10.5
-					: 8;
-
-				const nightHours = isFriday
-					? 10.5
-					: detectOvertimeFromTimestamps(nightTs, "Night")
-					? 10.5
-					: 8;
-
-				return {
-					seconds: (morningHours + nightHours) * 3600,
-					type: `Full Day (${morningHours}h + ${nightHours}h)`,
-				};
+				const typeLabel = isFriday
+					? hasOvertime
+						? "Jumat Pagi Overtime (10h)"
+						: "Jumat Pagi Normal (8h)"
+					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
+				return { seconds: hours * 3600, type: typeLabel };
 			}
+
+			if (shiftType === "Night") {
+				const hours = hasOvertime ? 10.5 : 8;
+				const typeLabel = isFriday
+					? hasOvertime
+						? "Jumat Malam Overtime (10.5h)"
+						: "Jumat Malam Normal (8h)"
+					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
+				return { seconds: hours * 3600, type: typeLabel };
+			}
+			const morningTs = timestamps.filter((ts) => {
+				const h = new Date(ts).getHours();
+				return h >= 7 && h < 19;
+			});
+			const nightTs = timestamps.filter((ts) => {
+				const h = new Date(ts).getHours();
+				return h >= 19 || h < 7;
+			});
+
+			const morningHasOvertime = detectOvertimeFromTimestamps(
+				morningTs,
+				"Morning"
+			);
+			const nightHasOvertime = detectOvertimeFromTimestamps(
+				nightTs,
+				"Night"
+			);
+
+			let morningHours, nightHours;
+
+			if (isFriday) {
+				morningHours = morningHasOvertime ? 10 : 8;
+				nightHours = nightHasOvertime ? 10.5 : 8;
+			} else {
+				morningHours = morningHasOvertime ? 10.5 : 8;
+				nightHours = nightHasOvertime ? 10.5 : 8;
+			}
+
+			return {
+				seconds: (morningHours + nightHours) * 3600,
+				type: `Full Day (${morningHours}h + ${nightHours}h)`,
+			};
 		};
 
 		const start = new Date(startDate);

@@ -2,14 +2,33 @@ require("module-alias/register");
 
 const mqtt = require("mqtt");
 const knex = require("@db/knex");
-const { brokerUrl, options, topic, qos } = require("@mqtt/mqttConfig");
+const { brokerUrl, options, qos } = require("@mqtt/mqttConfig");
 const { getDeviceId, clearDeviceCache } = require("@redis/deviceCache");
 const { emitToClients } = require("@socket/socketHandler");
 
-const HEARTBEAT_INTERVAL_MS = 5000;
+const SENSOR_TOPIC = "device/sensor_data";
 const HEARTBEAT_TOPIC = "device/heartbeat";
 
+const HEARTBEAT_INTERVAL_MS = 5000;
+const DEVICE_TIMEOUT_MS = 15000;
 const deviceLastActivity = new Map();
+
+function getLocalTimestamp() {
+	const now = new Date();
+	return (
+		now.getFullYear() +
+		"-" +
+		String(now.getMonth() + 1).padStart(2, "0") +
+		"-" +
+		String(now.getDate()).padStart(2, "0") +
+		" " +
+		String(now.getHours()).padStart(2, "0") +
+		":" +
+		String(now.getMinutes()).padStart(2, "0") +
+		":" +
+		String(now.getSeconds()).padStart(2, "0")
+	);
+}
 
 const clearAllCache = async () => {
 	console.log("[INIT] Clearing Redis cache");
@@ -27,21 +46,31 @@ const clearAllCache = async () => {
 	});
 
 	client.on("connect", () => {
-		console.log("[CONNECTED] Subscribe to broker");
+		console.log("[MQTT] Connected to broker");
 
-		client.subscribe(topic, { qos }, (err) => {
+		client.subscribe(SENSOR_TOPIC, { qos }, (err) => {
 			if (err) {
-				console.error("[ERROR] Subscribe sensor topic", err.message);
+				console.error(
+					"[ERROR] Failed to subscribe to sensor topic:",
+					err.message
+				);
 			} else {
-				console.log(`[SUCCESS] Subscribed to ${topic}`);
+				console.log(
+					`[SUB] Subscribed to sensor topic: ${SENSOR_TOPIC}`
+				);
 			}
 		});
 
 		client.subscribe(HEARTBEAT_TOPIC, { qos }, (err) => {
 			if (err) {
-				console.error("[ERROR] Subscribe heartbeat topic", err.message);
+				console.error(
+					"[ERROR] Failed to subscribe to heartbeat topic:",
+					err.message
+				);
 			} else {
-				console.log(`[SUCCESS] Subscribed to ${HEARTBEAT_TOPIC}`);
+				console.log(
+					`[SUB] Subscribed to heartbeat topic: ${HEARTBEAT_TOPIC}`
+				);
 			}
 		});
 	});
@@ -49,7 +78,12 @@ const clearAllCache = async () => {
 	client.on("message", async (receivedTopic, message) => {
 		try {
 			const data = JSON.parse(message.toString());
-			const { mac_address, type } = data;
+			const { mac_address } = data;
+
+			if (!mac_address) {
+				console.warn("[SKIP] Message missing mac_address");
+				return;
+			}
 
 			const device = await getDeviceId(mac_address);
 			if (!device) {
@@ -59,29 +93,36 @@ const clearAllCache = async () => {
 				return;
 			}
 
-			const timestamp = new Date().toISOString();
+			const timestamp = getLocalTimestamp();
+			deviceLastActivity.set(mac_address, Date.now());
 
 			if (receivedTopic === HEARTBEAT_TOPIC) {
-				deviceLastActivity.set(mac_address, Date.now());
-
 				console.log(`[HEARTBEAT] ${mac_address}`);
-
 				emitToClients("heartbeat", {
 					mac_address,
 					timestamp,
 				});
 				return;
 			}
-			if (type === "sensor_data" || !type) {
+
+			if (receivedTopic === SENSOR_TOPIC) {
 				const { red, amber, green } = data;
-				deviceLastActivity.set(mac_address, Date.now());
-				// await knex("sensor_readings").insert({
-				// 	insert_timestamp: timestamp,
-				// 	mac_address,
-				// 	red_information: red,
-				// 	amber_information: amber,
-				// 	green_information: green,
-				// });
+
+				if (red == null || amber == null || green == null) {
+					console.warn(
+						`[INVALID] Missing status fields from ${mac_address}`
+					);
+					return;
+				}
+
+				await knex("sensor_readings").insert({
+					insert_timestamp: timestamp,
+					mac_address,
+					red_information: red,
+					amber_information: amber,
+					green_information: green,
+				});
+
 				emitToClients("sensor_data", {
 					insert_timestamp: timestamp,
 					mac_address,
@@ -91,11 +132,17 @@ const clearAllCache = async () => {
 				});
 
 				console.log(
-					`[SENSOR] ${mac_address} | 🔴 ${red} 🟡 ${amber} 🟢 ${green}`
+					`[SENSOR] ${timestamp} | ${mac_address} | 🔴 ${red} 🟡 ${amber} 🟢 ${green}`
 				);
+				return;
 			}
+			console.warn(`[UNKNOWN TOPIC] ${receivedTopic}`);
 		} catch (err) {
-			console.error("[ERROR] Handling message:", err.message);
+			console.error(
+				"[ERROR] Parsing or handling MQTT message:",
+				err.message
+			);
+			console.error("[PAYLOAD]", message.toString());
 		}
 	});
 
@@ -109,16 +156,14 @@ const clearAllCache = async () => {
 
 	setInterval(async () => {
 		const now = Date.now();
-		const TIMEOUT_MS = 15000;
-
 		try {
 			const activeDevices = await knex("devices")
 				.select("mac_address", "device_name")
 				.where("status", "Active");
 
-			activeDevices.forEach((device) => {
+			for (const device of activeDevices) {
 				const lastSeen = deviceLastActivity.get(device.mac_address);
-				const isOnline = lastSeen && now - lastSeen < TIMEOUT_MS;
+				const isOnline = lastSeen && now - lastSeen < DEVICE_TIMEOUT_MS;
 
 				emitToClients("device_status", {
 					mac_address: device.mac_address,
@@ -133,21 +178,19 @@ const clearAllCache = async () => {
 				if (!isOnline && lastSeen) {
 					const offlineSeconds = Math.floor((now - lastSeen) / 1000);
 					console.log(
-						`[STATUS] ${device.mac_address} OFFLINE (${offlineSeconds}s since last activity)`
+						`[STATUS] ${device.mac_address} OFFLINE (${offlineSeconds}s)`
 					);
 				}
-			});
+			}
 		} catch (err) {
-			console.error("[ERROR] Heartbeat check:", err.message);
+			console.error("[ERROR] Device status check:", err.message);
 		}
 	}, HEARTBEAT_INTERVAL_MS);
 
 	setInterval(() => {
 		const now = Date.now();
-		const TIMEOUT_MS = 15000;
-
 		const onlineDevices = Array.from(deviceLastActivity.entries())
-			.filter(([_, lastSeen]) => now - lastSeen < TIMEOUT_MS)
+			.filter(([_, lastSeen]) => now - lastSeen < DEVICE_TIMEOUT_MS)
 			.map(([mac]) => mac);
 
 		console.log(`[STATUS] Online devices: ${onlineDevices.length}`);
