@@ -23,7 +23,7 @@ export default function LoginPage() {
 					</div>
 				</div>
 
-				<footer className="absolute bottom-6 left-0 right-0 text-center text-sm text-muted-foreground">
+				<footer className="absolute bottom-10 left-0 right-0 text-center text-sm text-muted-foreground">
 					<p>
 						© {new Date().getFullYear()} PT. SMT Indonesia | All
 						rights reserved
