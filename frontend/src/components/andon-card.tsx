@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Radio, MapPin, Clock, Zap, Loader2, WifiOff } from "lucide-react";
 import { useAndonSocket } from "./andon-socket";
+import { API_BASE_URL } from "@/config/api";
 
 interface Device {
 	device_name: string;
@@ -11,7 +12,7 @@ interface Device {
 	status: string;
 }
 
-const API_URL = `${import.meta.env.VITE_API_BASE_URL}/devices`;
+const API_URL = `${API_BASE_URL}/devices`;
 
 export function AndonCard() {
 	const { deviceStatus } = useAndonSocket();
@@ -127,8 +128,9 @@ export function AndonCard() {
 								)}
 								{isOnline && isGreen && (
 									<>
-										<div className="absolute -top-24 -right-24 w-48 h-48 bg-green-500/20 rounded-full blur-3xl" />
-										<div className="absolute -bottom-24 -left-24 w-48 h-48 bg-green-500/15 rounded-full blur-3xl" />
+										<div className="absolute inset-0 bg-gradient-to-br from-green-500/15 via-transparent to-transparent animate-pulse" />
+										<div className="absolute -top-24 -right-24 w-48 h-48 bg-green-500/20 rounded-full blur-3xl animate-pulse" />
+										<div className="absolute -bottom-24 -left-24 w-48 h-48 bg-green-500/15 rounded-full blur-3xl animate-pulse" />
 									</>
 								)}
 
@@ -244,14 +246,14 @@ export function AndonCard() {
 												<div
 													className={`w-14 h-14 rounded-md transition-all duration-300 ${
 														isOnline && isGreen
-															? "bg-gradient-to-br from-green-400 to-green-600 shadow-[0_0_30px_rgba(34,197,94,1)]"
+															? "bg-gradient-to-br from-green-400 to-green-600 shadow-[0_0_30px_rgba(34,197,94,1)] animate-pulse"
 															: isGreen
 															? "bg-gradient-to-br from-green-700/70 to-green-800/70 shadow-inner opacity-50"
 															: "bg-gradient-to-br from-green-950/50 to-green-900/30 shadow-inner"
 													}`}>
 													{isOnline && isGreen && (
 														<>
-															<div className="absolute inset-0 rounded-full bg-green-500 blur-2xl opacity-50" />
+															<div className="absolute inset-0 rounded-full bg-green-500 blur-2xl animate-pulse opacity-50" />
 															<div className="absolute inset-2 rounded-full bg-green-300 blur-sm" />
 														</>
 													)}

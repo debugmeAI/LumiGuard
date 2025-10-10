@@ -47,6 +47,7 @@ import { ShiftChart } from "@/components/shift-chart";
 import { DeviceChart } from "@/components/device-chart";
 import { GanttChart } from "@/components/gantt-chart";
 import { OEECard } from "@/components/oee-card";
+import { API_BASE_URL } from "@/config/api";
 
 interface ApiDevice {
 	mac_address: string;
@@ -153,9 +154,7 @@ function OverviewContent() {
 			try {
 				const dateStr = formatLocalDate(selectedDate);
 				const res = await fetch(
-					`${
-						import.meta.env.VITE_API_BASE_URL
-					}/sensor-data/summary?date=${dateStr}`
+					`${API_BASE_URL}/sensor-data/summary?date=${dateStr}`
 				);
 
 				if (!res.ok) throw new Error("Failed to fetch data");

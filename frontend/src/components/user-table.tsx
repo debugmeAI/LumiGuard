@@ -39,6 +39,7 @@ import { Plus } from "lucide-react";
 import { AddUserDialog } from "@/app/configuration/user/add-user-dialog";
 import { EditUserDialog } from "@/app/configuration/user/edit-user-dialog";
 import { DeleteUserDialog } from "@/app/configuration/user/delete-user-dialog";
+import { API_BASE_URL } from "@/config/api";
 
 type UserData = {
 	user_id: string;
@@ -84,15 +85,12 @@ export default function UserAccessTable({ isAdmin }: { isAdmin: boolean }) {
 	const fetchData = useCallback(async () => {
 		setLoading(true);
 		try {
-			const res = await axios.get(
-				import.meta.env.VITE_API_BASE_URL + "/users",
-				{
-					params: {
-						page: pagination.page,
-						limit: pagination.limit,
-					},
-				}
-			);
+			const res = await axios.get(API_BASE_URL + "/users", {
+				params: {
+					page: pagination.page,
+					limit: pagination.limit,
+				},
+			});
 			setData(res.data.data);
 			setPagination(res.data.pagination);
 		} catch (err) {
@@ -117,9 +115,7 @@ export default function UserAccessTable({ isAdmin }: { isAdmin: boolean }) {
 
 	const handleDelete = async (userId: string) => {
 		try {
-			await axios.delete(
-				`${import.meta.env.VITE_API_BASE_URL}/users/${userId}`
-			);
+			await axios.delete(`${API_BASE_URL}/users/${userId}`);
 			await fetchData();
 			toast.success(
 				`${selectedUser.username} successfully removed from the system`
@@ -150,15 +146,9 @@ export default function UserAccessTable({ isAdmin }: { isAdmin: boolean }) {
 			};
 
 			console.log("Payload to send:", payload);
-			console.log(
-				"API URL:",
-				`${import.meta.env.VITE_API_BASE_URL}/users`
-			);
+			console.log("API URL:", `${API_BASE_URL}/users`);
 
-			const response = await axios.post(
-				`${import.meta.env.VITE_API_BASE_URL}/users`,
-				payload
-			);
+			const response = await axios.post(`${API_BASE_URL}/users`, payload);
 
 			console.log("API Response:", response.data);
 
@@ -219,7 +209,7 @@ export default function UserAccessTable({ isAdmin }: { isAdmin: boolean }) {
 			};
 
 			await axios.put(
-				`${import.meta.env.VITE_API_BASE_URL}/users/${selectedUser.id}`,
+				`${API_BASE_URL}/users/${selectedUser.id}`,
 				payload
 			);
 
@@ -271,10 +261,9 @@ export default function UserAccessTable({ isAdmin }: { isAdmin: boolean }) {
 		newPassword: string
 	) => {
 		try {
-			await axios.put(
-				`${import.meta.env.VITE_API_BASE_URL}/users/${userId}/password`,
-				{ newPassword }
-			);
+			await axios.put(`${API_BASE_URL}/users/${userId}/password`, {
+				newPassword,
+			});
 			console.log("Password updated successfully");
 		} catch (err) {
 			console.error("Password update error:", err);

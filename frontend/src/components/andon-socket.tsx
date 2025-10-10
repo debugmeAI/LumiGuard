@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import io from "socket.io-client";
+import { SOCKET_BASE_URL } from "@/config/api";
 
 interface SensorData {
 	insert_timestamp: string;
@@ -27,7 +28,7 @@ interface DeviceStatus {
 	};
 }
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+const SOCKET_URL = SOCKET_BASE_URL;
 const HEARTBEAT_TIMEOUT = 10000;
 
 export const useAndonSocket = () => {

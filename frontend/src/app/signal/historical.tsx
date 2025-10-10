@@ -42,6 +42,7 @@ import DateTable, {
 	type DatePerformance,
 } from "@/components/history-device-table";
 import { type SummaryData } from "@/types/history";
+import { API_BASE_URL } from "@/config/api";
 
 export default function HistoricalData() {
 	const [startDate, setStartDate] = useState<Date | null>(null);
@@ -162,9 +163,7 @@ export default function HistoricalData() {
 			});
 
 			const response = await fetch(
-				`${
-					import.meta.env.VITE_API_BASE_URL
-				}/sensor-data/summary-history?${params}`
+				`${API_BASE_URL}/sensor-data/summary-history?${params}`
 			);
 
 			if (!response.ok) {

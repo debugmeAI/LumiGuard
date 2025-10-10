@@ -23,6 +23,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Ban } from "lucide-react";
+import { API_BASE_URL } from "@/config/api";
 
 interface PerDateItem {
 	date: string;
@@ -79,9 +80,7 @@ export function HistoricalChart({ range = "7days" }: { range?: string }) {
 
 			try {
 				const res = await fetch(
-					`${
-						import.meta.env.VITE_API_BASE_URL
-					}/sensor-data/summary-range?range=${range}`
+					`${API_BASE_URL}/sensor-data/summary-range?range=${range}`
 				);
 				if (!res.ok) throw new Error("Failed to fetch");
 

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import axios, { isAxiosError } from "axios";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/config/api";
 
 export function LoginForm({
 	className,
@@ -25,10 +26,10 @@ export function LoginForm({
 		setLoading(true);
 
 		try {
-			const response = await axios.post(
-				`${import.meta.env.VITE_API_BASE_URL}/auth/login`,
-				{ username, password }
-			);
+			const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+				username,
+				password,
+			});
 
 			localStorage.setItem("user", JSON.stringify(response.data.user));
 			localStorage.setItem("isLoggedIn", "true");
