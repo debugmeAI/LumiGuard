@@ -920,16 +920,27 @@ router.get("/summary-range", async (req, res) => {
 				return h >= 19 || h < 7;
 			});
 
-			const plannedMorning = calculatePlannedTime(
-				"Morning",
-				dateStr,
-				morningTs
-			).seconds;
-			const plannedNight = calculatePlannedTime(
-				"Night",
-				dateStr,
-				nightTs
-			).seconds;
+			let plannedMorning = 0;
+			let plannedNight = 0;
+			let morningType = "No Data";
+			let nightType = "No Data";
+
+			if (morningTs.length > 0) {
+				const planned = calculatePlannedTime(
+					"Morning",
+					dateStr,
+					morningTs
+				);
+				plannedMorning = planned.seconds;
+				morningType = planned.type;
+			}
+
+			if (nightTs.length > 0) {
+				const planned = calculatePlannedTime("Night", dateStr, nightTs);
+				plannedNight = planned.seconds;
+				nightType = planned.type;
+			}
+
 			const totalPlanned = plannedMorning + plannedNight;
 
 			const greenSec = parseFloat(results.total.green_seconds) || 0;
@@ -952,19 +963,20 @@ router.get("/summary-range", async (req, res) => {
 					? ((results.total.green_seconds / active) * 100).toFixed(2)
 					: "0.00";
 			const unknownPerc =
-				active > 0
-					? ((results.total.unknown_seconds / active) * 100).toFixed(
-							2
-					  )
+				totalPlanned > 0
+					? (
+							(results.total.unknown_seconds / totalPlanned) *
+							100
+					  ).toFixed(2)
 					: "0.00";
 
 			let shiftTypeLabel = "No Data";
 			if (plannedMorning > 0 && plannedNight > 0) {
-				shiftTypeLabel = "Full Day";
+				shiftTypeLabel = `Morning: ${morningType}, Night: ${nightType}`;
 			} else if (plannedMorning > 0) {
-				shiftTypeLabel = "Morning";
+				shiftTypeLabel = morningType;
 			} else if (plannedNight > 0) {
-				shiftTypeLabel = "Night";
+				shiftTypeLabel = nightType;
 			}
 
 			return {
@@ -1028,6 +1040,8 @@ router.get("/summary-range", async (req, res) => {
 		}
 
 		const activeTotal = parseFloat(totalAggregate.total_seconds) || 0;
+		const totalPlannedSec =
+			parseFloat(totalAggregate.planned_production_seconds) || 0;
 		const totalRedPerc =
 			activeTotal > 0
 				? (
@@ -1052,17 +1066,15 @@ router.get("/summary-range", async (req, res) => {
 				  ).toFixed(2)
 				: "0.00";
 		const totalUnknownPerc =
-			activeTotal > 0
+			totalPlannedSec > 0
 				? (
 						(parseFloat(totalAggregate.unknown_seconds) /
-							activeTotal) *
+							totalPlannedSec) *
 						100
 				  ).toFixed(2)
 				: "0.00";
 
 		const totalGreenSec = parseFloat(totalAggregate.green_seconds) || 0;
-		const totalPlannedSec =
-			parseFloat(totalAggregate.planned_production_seconds) || 0;
 		const totalOEE =
 			totalPlannedSec > 0
 				? ((totalGreenSec / totalPlannedSec) * 100).toFixed(2)
@@ -1088,7 +1100,7 @@ router.get("/summary-range", async (req, res) => {
 			},
 		});
 	} catch (err) {
-		console.error("GET /summary-history error:", err);
+		console.error("GET /summary-range error:", err);
 		res.status(500).json({
 			error: "Internal Server Error",
 			message: err.message,
