@@ -124,9 +124,11 @@ router.get("/summary", async (req, res) => {
 				}
 				const typeLabel = isFriday
 					? hasOvertime
-						? "Jumat Pagi Overtime (10h)"
-						: "Jumat Pagi Normal (8h)"
-					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
+						? "Pagi Overtime (10h)"
+						: "Pagi Normal (8h)"
+					: `${
+							hasOvertime ? "Pagi Overtime" : "Pagi Normal"
+					  } (${hours}h)`;
 				return { seconds: hours * 3600, type: typeLabel };
 			}
 
@@ -134,9 +136,11 @@ router.get("/summary", async (req, res) => {
 				const hours = hasOvertime ? 10.5 : 8;
 				const typeLabel = isFriday
 					? hasOvertime
-						? "Jumat Malam Overtime (10.5h)"
-						: "Jumat Malam Normal (8h)"
-					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
+						? "Malam Overtime (10.5h)"
+						: "Malam Normal (8h)"
+					: `${
+							hasOvertime ? "Malam Overtime" : "Malam Normal"
+					  } (${hours}h)`;
 				return { seconds: hours * 3600, type: typeLabel };
 			}
 
@@ -375,45 +379,73 @@ router.get("/summary", async (req, res) => {
 			morningType = "No Data",
 			nightType = "No Data";
 
+		const allTimestamps = rawData.map((r) => r.insert_timestamp);
+		const morningTimestamps = allTimestamps.filter((ts) => {
+			const h = new Date(ts).getHours();
+			return h >= 7 && h < 19;
+		});
+		const nightTimestamps = allTimestamps.filter((ts) => {
+			const h = new Date(ts).getHours();
+			return h >= 19 || h < 7;
+		});
+
 		Object.values(processed.shifts).forEach((shiftData) => {
 			const key = `${shiftData.shift_date}_${shiftData.calculated_shift}`;
 			const ts = processed.shiftTimestamps[key] || [];
-			const planned = calculatePlannedTime(
-				shiftData.calculated_shift,
-				shiftData.shift_date,
-				ts
-			);
-			if (shiftData.calculated_shift === "Morning") {
-				plannedMorning = planned.seconds;
-				morningType = planned.type;
-			} else {
-				plannedNight = planned.seconds;
-				nightType = planned.type;
+
+			if (ts.length > 0) {
+				const planned = calculatePlannedTime(
+					shiftData.calculated_shift,
+					shiftData.shift_date,
+					ts
+				);
+				if (shiftData.calculated_shift === "Morning") {
+					plannedMorning = planned.seconds;
+					morningType = planned.type;
+				} else if (shiftData.calculated_shift === "Night") {
+					plannedNight = planned.seconds;
+					nightType = planned.type;
+				}
 			}
 		});
 
 		if (
 			plannedMorning === 0 &&
+			morningTimestamps.length > 0 &&
 			(!shift || shift.toLowerCase() === "morning")
 		) {
 			const p = calculatePlannedTime(
 				"Morning",
-				getLogicalDate(startTime)
+				getLogicalDate(startTime),
+				morningTimestamps
 			);
 			plannedMorning = p.seconds;
 			morningType = p.type;
 		}
-		if (plannedNight === 0 && (!shift || shift.toLowerCase() === "night")) {
-			const p = calculatePlannedTime("Night", getLogicalDate(startTime));
+
+		if (
+			plannedNight === 0 &&
+			nightTimestamps.length > 0 &&
+			(!shift || shift.toLowerCase() === "night")
+		) {
+			const p = calculatePlannedTime(
+				"Night",
+				getLogicalDate(startTime),
+				nightTimestamps
+			);
 			plannedNight = p.seconds;
 			nightType = p.type;
 		}
 
-		const totalPlanned = shift
-			? shift.toLowerCase() === "morning"
-				? plannedMorning
-				: plannedNight
-			: plannedMorning + plannedNight;
+		let totalPlanned;
+		if (shift) {
+			totalPlanned =
+				shift.toLowerCase() === "morning"
+					? plannedMorning
+					: plannedNight;
+		} else {
+			totalPlanned = plannedMorning + plannedNight;
+		}
 
 		const totalWithPerc = calculatePercentages(
 			processed.total,
@@ -425,17 +457,29 @@ router.get("/summary", async (req, res) => {
 				? ((greenSec / totalPlanned) * 100).toFixed(2)
 				: "0.00";
 
+		let shiftTypeDisplay;
+		if (shift) {
+			shiftTypeDisplay =
+				shift.toLowerCase() === "morning" ? morningType : nightType;
+		} else {
+			if (plannedMorning > 0 && plannedNight > 0) {
+				shiftTypeDisplay = `Morning: ${morningType}, Night: ${nightType}`;
+			} else if (plannedMorning > 0) {
+				shiftTypeDisplay = morningType;
+			} else if (plannedNight > 0) {
+				shiftTypeDisplay = nightType;
+			} else {
+				shiftTypeDisplay = "No Data";
+			}
+		}
+
 		const totalRow = {
 			...totalWithPerc,
 			planned_production_seconds: totalPlanned.toString(),
 			planned_morning_seconds: plannedMorning.toString(),
 			planned_night_seconds: plannedNight.toString(),
 			availability_oee: oee,
-			shift_type: shift
-				? shift.toLowerCase() === "morning"
-					? morningType
-					: nightType
-				: `Morning: ${morningType}, Night: ${nightType}`,
+			shift_type: shiftTypeDisplay,
 		};
 
 		const perDevice = [];
@@ -443,39 +487,47 @@ router.get("/summary", async (req, res) => {
 			Object.values(device.shifts).forEach((shiftData) => {
 				const key = `${shiftData.shift_date}_${shiftData.calculated_shift}`;
 				const ts = device.shifts[key]?.timestamps || [];
-				const planned = calculatePlannedTime(
-					shiftData.calculated_shift,
-					shiftData.shift_date,
-					ts
-				);
-				const green = parseFloat(shiftData.green_seconds) || 0;
-				const oeeShift =
-					planned.seconds > 0
-						? ((green / planned.seconds) * 100).toFixed(2)
-						: "0.00";
-				const withPercentages = calculatePercentages(
-					shiftData,
-					planned.seconds
-				);
-				perDevice.push({
-					...withPercentages,
-					mac_address: device.mac_address,
-					device_name: device.device_name,
-					planned_production_seconds: planned.seconds.toString(),
-					availability_oee: oeeShift,
-					shift_type: planned.type,
-				});
+
+				if (ts.length > 0) {
+					const planned = calculatePlannedTime(
+						shiftData.calculated_shift,
+						shiftData.shift_date,
+						ts
+					);
+					const green = parseFloat(shiftData.green_seconds) || 0;
+					const oeeShift =
+						planned.seconds > 0
+							? ((green / planned.seconds) * 100).toFixed(2)
+							: "0.00";
+					const withPercentages = calculatePercentages(
+						shiftData,
+						planned.seconds
+					);
+					perDevice.push({
+						...withPercentages,
+						mac_address: device.mac_address,
+						device_name: device.device_name,
+						planned_production_seconds: planned.seconds.toString(),
+						availability_oee: oeeShift,
+						shift_type: planned.type,
+					});
+				}
 			});
 		});
 
 		const perShift = Object.values(processed.shifts).map((shiftData) => {
 			const key = `${shiftData.shift_date}_${shiftData.calculated_shift}`;
 			const ts = processed.shiftTimestamps[key] || [];
-			const planned = calculatePlannedTime(
-				shiftData.calculated_shift,
-				shiftData.shift_date,
-				ts
-			);
+
+			let planned = { seconds: 0, type: "No Data" };
+			if (ts.length > 0) {
+				planned = calculatePlannedTime(
+					shiftData.calculated_shift,
+					shiftData.shift_date,
+					ts
+				);
+			}
+
 			const green = parseFloat(shiftData.green_seconds) || 0;
 			const oeeShift =
 				planned.seconds > 0
@@ -682,9 +734,11 @@ router.get("/summary-range", async (req, res) => {
 				}
 				const typeLabel = isFriday
 					? hasOvertime
-						? "Jumat Pagi Overtime (10h)"
-						: "Jumat Pagi Normal (8h)"
-					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
+						? "Pagi Overtime (10h)"
+						: "Pagi Normal (8h)"
+					: `${
+							hasOvertime ? "Pagi Overtime" : "Pagi Normal"
+					  } (${hours}h)`;
 				return { seconds: hours * 3600, type: typeLabel };
 			}
 
@@ -692,9 +746,11 @@ router.get("/summary-range", async (req, res) => {
 				const hours = hasOvertime ? 10.5 : 8;
 				const typeLabel = isFriday
 					? hasOvertime
-						? "Jumat Malam Overtime (10.5h)"
-						: "Jumat Malam Normal (8h)"
-					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
+						? "Malam Overtime (10.5h)"
+						: "Malam Normal (8h)"
+					: `${
+							hasOvertime ? "Malam Overtime" : "Malam Normal"
+					  } (${hours}h)`;
 				return { seconds: hours * 3600, type: typeLabel };
 			}
 
@@ -1161,9 +1217,11 @@ router.get("/summary-history", async (req, res) => {
 				}
 				const typeLabel = isFriday
 					? hasOvertime
-						? "Jumat Pagi Overtime (10h)"
-						: "Jumat Pagi Normal (8h)"
-					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
+						? "Pagi Overtime (10h)"
+						: "Pagi Normal (8h)"
+					: `${
+							hasOvertime ? "Pagi Overtime" : "Pagi Normal"
+					  } (${hours}h)`;
 				return { seconds: hours * 3600, type: typeLabel };
 			}
 
@@ -1171,9 +1229,11 @@ router.get("/summary-history", async (req, res) => {
 				const hours = hasOvertime ? 10.5 : 8;
 				const typeLabel = isFriday
 					? hasOvertime
-						? "Jumat Malam Overtime (10.5h)"
-						: "Jumat Malam Normal (8h)"
-					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
+						? "Malam Overtime (10.5h)"
+						: "Malam Normal (8h)"
+					: `${
+							hasOvertime ? "Malam Overtime" : "Malam Normal"
+					  } (${hours}h)`;
 				return { seconds: hours * 3600, type: typeLabel };
 			}
 			const morningTs = timestamps.filter((ts) => {
@@ -1321,26 +1381,38 @@ router.get("/summary-history", async (req, res) => {
 				morningType = "No Data",
 				nightType = "No Data";
 
-			if (!shiftFilter || shiftFilter.toLowerCase() === "morning") {
-				const morningTs = allTimestamps.filter((ts) => {
-					const h = new Date(ts).getHours();
-					return h >= 7 && h < 19;
-				});
+			const morningTimestamps = allTimestamps.filter((ts) => {
+				const h = new Date(ts).getHours();
+				return h >= 7 && h < 19;
+			});
+
+			const nightTimestamps = allTimestamps.filter((ts) => {
+				const h = new Date(ts).getHours();
+				return h >= 19 || h < 7;
+			});
+
+			if (
+				(!shiftFilter || shiftFilter.toLowerCase() === "morning") &&
+				morningTimestamps.length > 0
+			) {
 				const planned = calculatePlannedTime(
 					"Morning",
 					dateStr,
-					morningTs
+					morningTimestamps
 				);
 				plannedMorning = planned.seconds;
 				morningType = planned.type;
 			}
 
-			if (!shiftFilter || shiftFilter.toLowerCase() === "night") {
-				const nightTs = allTimestamps.filter((ts) => {
-					const h = new Date(ts).getHours();
-					return h >= 19 || h < 7;
-				});
-				const planned = calculatePlannedTime("Night", dateStr, nightTs);
+			if (
+				(!shiftFilter || shiftFilter.toLowerCase() === "night") &&
+				nightTimestamps.length > 0
+			) {
+				const planned = calculatePlannedTime(
+					"Night",
+					dateStr,
+					nightTimestamps
+				);
 				plannedNight = planned.seconds;
 				nightType = planned.type;
 			}
