@@ -58,10 +58,10 @@ export function GanttChart({
 			toolbar: {
 				show: false,
 			},
-			height: "300px",
+			height: "200px",
 			type: "rangeBar",
 			background: isDark ? "#191919" : "#FFFFFF",
-			foreColor: isDark ? "#Fafafa" : "#191919",
+			foreColor: isDark ? "#Fafafa" : "#0a0a0a",
 			animations: {
 				enabled: true,
 			},
@@ -71,6 +71,7 @@ export function GanttChart({
 			selection: {
 				enabled: false,
 			},
+			offsetY: -20,
 		},
 		plotOptions: {
 			bar: {
@@ -86,10 +87,12 @@ export function GanttChart({
 				datetimeUTC: false,
 				style: {
 					fontSize: "13px",
+					colors: isDark ? "#F3F4F6" : "#1F2937",
 				},
+				offsetY: 5,
 			},
-			axisBorder: { color: isDark ? "#9CA3AF" : "#D1D5DB" },
-			axisTicks: { color: isDark ? "#9CA3AF" : "#D1D5DB" },
+			axisBorder: { color: isDark ? "#383838" : "#e5e5e5" },
+			axisTicks: { color: isDark ? "#383838" : "#e5e5e5" },
 			min: pageStartTime,
 			max: pageEndTime,
 		},
@@ -107,10 +110,9 @@ export function GanttChart({
 			x: { format: "HH:mm:ss" },
 		},
 		legend: {
-			position: "bottom",
+			position: "right",
 			labels: { colors: isDark ? "#F3F4F6" : "#1F2937" },
 			fontSize: "13px",
-			offsetY: 15,
 		},
 	};
 

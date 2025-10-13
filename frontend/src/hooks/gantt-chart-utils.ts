@@ -65,7 +65,9 @@ export function useGanttPagination(
 			const millisPerPage = effectiveMinutesPerPage * 60 * 1000;
 			const pages = Math.ceil(totalDuration / millisPerPage);
 
-			const pageStart = minTime + currentPage * millisPerPage;
+			const safePage = Math.min(Math.max(0, currentPage), pages - 1);
+
+			const pageStart = minTime + safePage * millisPerPage;
 			const pageEnd = Math.min(pageStart + millisPerPage, maxTime);
 
 			const paginated = series.map((s) => ({
@@ -76,6 +78,31 @@ export function useGanttPagination(
 					return dataStart < pageEnd && dataEnd > pageStart;
 				}),
 			}));
+
+			const hasDataOnPage = paginated.some((s) => s.data.length > 0);
+
+			if (!hasDataOnPage && pages > 0) {
+				const lastPageStart = minTime + (pages - 1) * millisPerPage;
+				const lastPageEnd = maxTime;
+
+				const lastPageData = series.map((s) => ({
+					...s,
+					data: s.data.filter((d) => {
+						const dataStart = d.y[0];
+						const dataEnd = d.y[1];
+						return (
+							dataStart < lastPageEnd && dataEnd > lastPageStart
+						);
+					}),
+				}));
+
+				return {
+					paginatedSeries: lastPageData,
+					totalPages: pages,
+					pageStartTime: lastPageStart,
+					pageEndTime: lastPageEnd,
+				};
+			}
 
 			return {
 				paginatedSeries: paginated,
@@ -94,6 +121,12 @@ export function useGanttPagination(
 			prevSeriesRef.current = series;
 		}
 	}, [series, totalPages]);
+
+	useEffect(() => {
+		if (currentPage >= totalPages && totalPages > 0) {
+			setCurrentPage(totalPages - 1);
+		}
+	}, [currentPage, totalPages]);
 
 	return {
 		paginatedSeries,

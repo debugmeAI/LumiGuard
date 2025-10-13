@@ -137,7 +137,7 @@ function OverviewContent() {
 	const [refreshInterval, setRefreshInterval] = useState<string>("0");
 	const [countdown, setCountdown] = useState<number>(0);
 	const { state } = useSidebar();
-	const pagination = useGanttPagination(ganttData, 10);
+	const pagination = useGanttPagination(ganttData, 30);
 	const [isDark, setIsDark] = useState(false);
 
 	const formatLocalDate = (date: Date) => {
