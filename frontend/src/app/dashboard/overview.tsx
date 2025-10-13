@@ -46,6 +46,8 @@ import { TotalChart } from "@/components/total-chart";
 import { ShiftChart } from "@/components/shift-chart";
 import { DeviceChart } from "@/components/device-chart";
 import { GanttChart } from "@/components/gantt-chart";
+import { useGanttPagination } from "@/hooks/gantt-chart-utils";
+import { PaginationControls } from "@/components/gantt-pagination";
 import { OEECard } from "@/components/oee-card";
 import { API_BASE_URL } from "@/config/api";
 
@@ -135,6 +137,8 @@ function OverviewContent() {
 	const [refreshInterval, setRefreshInterval] = useState<string>("0");
 	const [countdown, setCountdown] = useState<number>(0);
 	const { state } = useSidebar();
+	const pagination = useGanttPagination(ganttData, 5);
+	const [isDark, setIsDark] = useState(false);
 
 	const formatLocalDate = (date: Date) => {
 		const year = date.getFullYear();
@@ -254,6 +258,18 @@ function OverviewContent() {
 	const hasGantt = ganttData.length > 0;
 
 	const hasAnyData = hasDevice || hasShift || hasGantt;
+
+	useEffect(() => {
+		const checkDark = () =>
+			setIsDark(document.documentElement.classList.contains("dark"));
+		checkDark();
+		const observer = new MutationObserver(checkDark);
+		observer.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ["class"],
+		});
+		return () => observer.disconnect();
+	}, []);
 
 	return (
 		<>
@@ -408,17 +424,40 @@ function OverviewContent() {
 									/>
 								)}
 								{hasGantt && (
-									<Card className="w-full flex flex-col flex-1">
-										<CardHeader>
-											<CardTitle>Timeline</CardTitle>
-											<CardDescription>
-												Production activity timeline
-											</CardDescription>
+									<Card>
+										<CardHeader className="flex flex-row items-center justify-between space-y-0">
+											<div>
+												<CardTitle>Timeline</CardTitle>
+												<CardDescription>
+													Production activity timeline
+												</CardDescription>
+											</div>
+
+											<PaginationControls
+												currentPage={
+													pagination.currentPage
+												}
+												totalPages={
+													pagination.totalPages
+												}
+												onPageChange={
+													pagination.setCurrentPage
+												}
+												isDark={isDark}
+											/>
 										</CardHeader>
-										<CardContent className="flex-1">
+										<CardContent>
 											<GanttChart
-												series={ganttData}
+												series={
+													pagination.paginatedSeries
+												}
 												loading={loading}
+												pageStartTime={
+													pagination.pageStartTime
+												}
+												pageEndTime={
+													pagination.pageEndTime
+												}
 											/>
 										</CardContent>
 									</Card>

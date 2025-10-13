@@ -16,6 +16,8 @@ export interface SeriesData {
 interface GanttChartProps {
 	series: SeriesData[];
 	loading: boolean;
+	pageStartTime: number;
+	pageEndTime: number;
 }
 
 const COLOR_MAP: Record<string, string> = {
@@ -25,7 +27,12 @@ const COLOR_MAP: Record<string, string> = {
 	Unknown: "#6b7280",
 };
 
-export function GanttChart({ series, loading }: GanttChartProps) {
+export function GanttChart({
+	series,
+	loading,
+	pageStartTime,
+	pageEndTime,
+}: GanttChartProps) {
 	const [isDark, setIsDark] = useState(false);
 
 	useEffect(() => {
@@ -40,8 +47,10 @@ export function GanttChart({ series, loading }: GanttChartProps) {
 		return () => observer.disconnect();
 	}, []);
 
-	if (loading) return <div>Loading GanttChart...</div>;
-	if (series.length === 0) return <div>No data</div>;
+	if (loading)
+		return <div className="p-4 text-center">Loading GanttChart...</div>;
+	if (series.length === 0)
+		return <div className="p-4 text-center">No data</div>;
 
 	const options: ApexOptions = {
 		chart: {
@@ -51,18 +60,26 @@ export function GanttChart({ series, loading }: GanttChartProps) {
 					download: false,
 					selection: false,
 					zoom: false,
-					zoomin: true,
-					zoomout: true,
-					pan: true,
+					zoomin: false,
+					zoomout: false,
+					pan: false,
 					reset: true,
 					customIcons: [],
 				},
-				autoSelected: "pan",
 			},
 			height: 600,
 			type: "rangeBar",
-			background: isDark ? "#171717" : "#FFFFFF",
-			foreColor: isDark ? "#F3F4F6" : "#171717",
+			background: isDark ? "#191919" : "#FFFFFF",
+			foreColor: isDark ? "#Fafafa" : "#191919",
+			animations: {
+				enabled: false,
+			},
+			zoom: {
+				enabled: false,
+			},
+			selection: {
+				enabled: false,
+			},
 		},
 		plotOptions: {
 			bar: {
@@ -77,6 +94,8 @@ export function GanttChart({ series, loading }: GanttChartProps) {
 			labels: { datetimeUTC: false },
 			axisBorder: { color: isDark ? "#9CA3AF" : "#D1D5DB" },
 			axisTicks: { color: isDark ? "#9CA3AF" : "#D1D5DB" },
+			min: pageStartTime,
+			max: pageEndTime,
 		},
 		yaxis: {
 			labels: { style: { colors: isDark ? "#F3F4F6" : "#1F2937" } },
@@ -93,12 +112,14 @@ export function GanttChart({ series, loading }: GanttChartProps) {
 	};
 
 	return (
-		<ReactApexChart
-			options={options}
-			series={series}
-			type="rangeBar"
-			height={250}
-			width="100%"
-		/>
+		<div className="w-full">
+			<ReactApexChart
+				options={options}
+				series={series}
+				type="rangeBar"
+				height={200}
+				width="100%"
+			/>
+		</div>
 	);
 }
