@@ -54,25 +54,16 @@ export function GanttChart({
 
 	const options: ApexOptions = {
 		chart: {
+			fontFamily: "Geist Mono, monospace",
 			toolbar: {
-				show: true,
-				tools: {
-					download: false,
-					selection: false,
-					zoom: false,
-					zoomin: false,
-					zoomout: false,
-					pan: false,
-					reset: true,
-					customIcons: [],
-				},
+				show: false,
 			},
-			height: 600,
+			height: "300px",
 			type: "rangeBar",
 			background: isDark ? "#191919" : "#FFFFFF",
 			foreColor: isDark ? "#Fafafa" : "#191919",
 			animations: {
-				enabled: false,
+				enabled: true,
 			},
 			zoom: {
 				enabled: false,
@@ -91,14 +82,24 @@ export function GanttChart({
 		fill: { type: "solid" },
 		xaxis: {
 			type: "datetime",
-			labels: { datetimeUTC: false },
+			labels: {
+				datetimeUTC: false,
+				style: {
+					fontSize: "13px",
+				},
+			},
 			axisBorder: { color: isDark ? "#9CA3AF" : "#D1D5DB" },
 			axisTicks: { color: isDark ? "#9CA3AF" : "#D1D5DB" },
 			min: pageStartTime,
 			max: pageEndTime,
 		},
 		yaxis: {
-			labels: { style: { colors: isDark ? "#F3F4F6" : "#1F2937" } },
+			labels: {
+				style: {
+					fontSize: "13px",
+					colors: isDark ? "#F3F4F6" : "#1F2937",
+				},
+			},
 		},
 		grid: { borderColor: isDark ? "#374151" : "#E5E7EB" },
 		tooltip: {
@@ -108,6 +109,8 @@ export function GanttChart({
 		legend: {
 			position: "bottom",
 			labels: { colors: isDark ? "#F3F4F6" : "#1F2937" },
+			fontSize: "13px",
+			offsetY: 15,
 		},
 	};
 

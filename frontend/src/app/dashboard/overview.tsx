@@ -424,29 +424,28 @@ function OverviewContent() {
 									/>
 								)}
 								{hasGantt && (
-									<Card>
-										<CardHeader className="flex flex-row items-center justify-between space-y-0">
-											<div>
-												<CardTitle>Timeline</CardTitle>
-												<CardDescription>
-													Production activity timeline
-												</CardDescription>
-											</div>
-
-											<PaginationControls
-												currentPage={
-													pagination.currentPage
-												}
-												totalPages={
-													pagination.totalPages
-												}
-												onPageChange={
-													pagination.setCurrentPage
-												}
-												isDark={isDark}
-											/>
+									<Card className="w-full flex flex-col">
+										<CardHeader>
+											<CardTitle>Timeline</CardTitle>
+											<CardDescription>
+												Production activity timeline
+											</CardDescription>
+											<CardAction>
+												<PaginationControls
+													currentPage={
+														pagination.currentPage
+													}
+													totalPages={
+														pagination.totalPages
+													}
+													onPageChange={
+														pagination.setCurrentPage
+													}
+													isDark={isDark}
+												/>
+											</CardAction>
 										</CardHeader>
-										<CardContent>
+										<CardContent className="flex-1">
 											<GanttChart
 												series={
 													pagination.paginatedSeries
