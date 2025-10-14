@@ -85,16 +85,30 @@ export function GanttChart({
 			type: "datetime",
 			labels: {
 				datetimeUTC: false,
+				format: "HH:mm:ss",
+				datetimeFormatter: {
+					year: "yyyy",
+					month: "MMM 'yy",
+					day: "dd MMM",
+					hour: "HH:mm",
+					minute: "HH:mm:ss",
+					second: "HH:mm:ss",
+				},
 				style: {
 					fontSize: "13px",
 					colors: isDark ? "#F3F4F6" : "#1F2937",
 				},
 				offsetY: 5,
+				rotate: 0,
 			},
 			axisBorder: { color: isDark ? "#383838" : "#e5e5e5" },
-			axisTicks: { color: isDark ? "#383838" : "#e5e5e5" },
+			axisTicks: {
+				color: isDark ? "#383838" : "#e5e5e5",
+				show: true,
+			},
 			min: pageStartTime,
 			max: pageEndTime,
+			tickAmount: 10,
 		},
 		yaxis: {
 			labels: {
@@ -104,10 +118,17 @@ export function GanttChart({
 				},
 			},
 		},
-		grid: { borderColor: isDark ? "#374151" : "#E5E7EB" },
+		grid: {
+			borderColor: isDark ? "#374151" : "#E5E7EB",
+			xaxis: {
+				lines: {
+					show: true,
+				},
+			},
+		},
 		tooltip: {
 			theme: isDark ? "dark" : "light",
-			x: { format: "HH:mm:ss" },
+			x: { format: "dd/MM/yyyy HH:mm:ss" },
 		},
 		legend: {
 			position: "right",
