@@ -140,7 +140,7 @@ export default function DateTable({ data }: DateTableProps) {
 								Error Time
 							</TableHead>
 							<TableHead className="text-center">
-								Error Count
+								Total Errors
 							</TableHead>
 							<TableHead className="text-center">
 								Unknown Time

@@ -218,8 +218,8 @@ export function OEECard({
 						</div>
 						<div className="grid grid-cols-3 gap-3">
 							<div className="col-span-2 p-3 rounded-lg bg-white/60 dark:bg-black/40 border border-red-200 dark:border-red-800 transition-colors duration-200 hover:bg-white/80 dark:hover:bg-black/60">
-								<div className="grid grid-cols-2 gap-4">
-									<div className="text-center border-r border-red-200 dark:border-red-800">
+								<div className="flex items-start">
+									<div className="flex-1 text-center">
 										<div className="text-xs text-gray-600 dark:text-gray-400">
 											Error Time
 										</div>
@@ -234,12 +234,17 @@ export function OEECard({
 										</div>
 									</div>
 
-									<div className="text-center">
+									<div className="w-px bg-gray-300 dark:bg-gray-700 mx-3 self-stretch"></div>
+
+									<div className="flex-1 text-center">
 										<div className="text-xs text-gray-600 dark:text-gray-400">
-											Error Count
+											Total Errors
 										</div>
-										<div className="text-4xl font-bold text-red-600 dark:text-red-400">
+										<div className="text-lg font-bold text-red-600 dark:text-red-400">
 											{countError}
+										</div>
+										<div className="text-xs text-gray-500">
+											Occurrences
 										</div>
 									</div>
 								</div>
@@ -284,7 +289,7 @@ export function OEECard({
 							</div>
 							<div className="text-sm text-gray-500">
 								{utilizationPercentage.toFixed(2)}% utilization
-								({totalOperatingSeconds.toFixed(0)} seconds)
+								• {totalOperatingSeconds.toFixed(0)} seconds
 							</div>
 						</div>
 					</div>
