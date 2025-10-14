@@ -74,6 +74,10 @@ router.get("/summary", async (req, res) => {
 			green_seconds: "0",
 			unknown_seconds: "0",
 			total_seconds: "0",
+			red_count: "0",
+			amber_count: "0",
+			green_count: "0",
+			unknown_count: "0",
 			red_percent: "0.00",
 			amber_percent: "0.00",
 			green_percent: "0.00",
@@ -218,6 +222,10 @@ router.get("/summary", async (req, res) => {
 					green_seconds: 0,
 					unknown_seconds: 0,
 					total_seconds: 0,
+					red_count: 0,
+					amber_count: 0,
+					green_count: 0,
+					unknown_count: 0,
 				},
 			};
 
@@ -282,6 +290,10 @@ router.get("/summary", async (req, res) => {
 							green_seconds: 0,
 							unknown_seconds: 0,
 							total_seconds: 0,
+							red_count: 0,
+							amber_count: 0,
+							green_count: 0,
+							unknown_count: 0,
 							timestamps: [],
 						};
 					}
@@ -296,6 +308,10 @@ router.get("/summary", async (req, res) => {
 							green_seconds: 0,
 							unknown_seconds: 0,
 							total_seconds: 0,
+							red_count: 0,
+							amber_count: 0,
+							green_count: 0,
+							unknown_count: 0,
 						};
 					}
 					if (!results.shiftTimestamps[shiftKey]) {
@@ -308,6 +324,10 @@ router.get("/summary", async (req, res) => {
 					results.shiftTimestamps[shiftKey].push(
 						current.insert_timestamp
 					);
+
+					results.devices[mac].shifts[shiftKey][`${status}_count`]++;
+					results.shifts[shiftKey][`${status}_count`]++;
+					results.total[`${status}_count`]++;
 
 					const deviceContribution = duration;
 					const globalContribution = duration / totalDevices;
@@ -471,6 +491,10 @@ router.get("/summary", async (req, res) => {
 
 		const totalRow = {
 			...totalWithPerc,
+			red_count: processed.total.red_count.toString(),
+			amber_count: processed.total.amber_count.toString(),
+			green_count: processed.total.green_count.toString(),
+			unknown_count: processed.total.unknown_count.toString(),
 			planned_production_seconds: totalPlanned.toString(),
 			planned_morning_seconds: plannedMorning.toString(),
 			planned_night_seconds: plannedNight.toString(),
@@ -503,6 +527,10 @@ router.get("/summary", async (req, res) => {
 						...withPercentages,
 						mac_address: device.mac_address,
 						device_name: device.device_name,
+						red_count: shiftData.red_count.toString(),
+						amber_count: shiftData.amber_count.toString(),
+						green_count: shiftData.green_count.toString(),
+						unknown_count: shiftData.unknown_count.toString(),
 						planned_production_seconds: planned.seconds.toString(),
 						availability_oee: oeeShift,
 						shift_type: planned.type,
@@ -531,6 +559,10 @@ router.get("/summary", async (req, res) => {
 					: "0.00";
 			return {
 				...calculatePercentages(shiftData, planned.seconds),
+				red_count: shiftData.red_count.toString(),
+				amber_count: shiftData.amber_count.toString(),
+				green_count: shiftData.green_count.toString(),
+				unknown_count: shiftData.unknown_count.toString(),
 				planned_production_seconds: planned.seconds.toString(),
 				availability_oee: oeeShift,
 				shift_type: planned.type,
@@ -1171,6 +1203,10 @@ router.get("/summary-history", async (req, res) => {
 			green_seconds: "0",
 			unknown_seconds: "0",
 			total_seconds: "0",
+			red_count: "0",
+			amber_count: "0",
+			green_count: "0",
+			unknown_count: "0",
 			red_percent: "0.00",
 			amber_percent: "0.00",
 			green_percent: "0.00",
@@ -1313,6 +1349,10 @@ router.get("/summary-history", async (req, res) => {
 					amber_seconds: 0,
 					green_seconds: 0,
 					unknown_seconds: 0,
+					red_count: 0,
+					amber_count: 0,
+					green_count: 0,
+					unknown_count: 0,
 				},
 			};
 			const uniqueDevices = new Set(rawData.map((d) => d.mac_address));
@@ -1360,6 +1400,8 @@ router.get("/summary-history", async (req, res) => {
 							continue;
 						}
 					}
+
+					results.total[`${status}_count`]++;
 
 					const globalContribution = duration / totalDevices;
 					if (status === "unknown") {
@@ -1461,6 +1503,10 @@ router.get("/summary-history", async (req, res) => {
 				green_seconds: results.total.green_seconds.toString(),
 				unknown_seconds: results.total.unknown_seconds.toString(),
 				total_seconds: totalActiveSeconds.toString(),
+				red_count: results.total.red_count.toString(),
+				amber_count: results.total.amber_count.toString(),
+				green_count: results.total.green_count.toString(),
+				unknown_count: results.total.unknown_count.toString(),
 				red_percent: redPerc,
 				amber_percent: amberPerc,
 				green_percent: greenPerc,
@@ -1499,6 +1545,22 @@ router.get("/summary-history", async (req, res) => {
 			totalAggregate.total_seconds = (
 				parseFloat(totalAggregate.total_seconds) +
 				parseFloat(result.total_seconds)
+			).toString();
+			totalAggregate.red_count = (
+				parseFloat(totalAggregate.red_count) +
+				parseFloat(result.red_count)
+			).toString();
+			totalAggregate.amber_count = (
+				parseFloat(totalAggregate.amber_count) +
+				parseFloat(result.amber_count)
+			).toString();
+			totalAggregate.green_count = (
+				parseFloat(totalAggregate.green_count) +
+				parseFloat(result.green_count)
+			).toString();
+			totalAggregate.unknown_count = (
+				parseFloat(totalAggregate.unknown_count) +
+				parseFloat(result.unknown_count)
 			).toString();
 			totalAggregate.planned_production_seconds = (
 				parseFloat(totalAggregate.planned_production_seconds) +
@@ -1583,5 +1645,4 @@ router.get("/summary-history", async (req, res) => {
 		});
 	}
 });
-
 module.exports = router;

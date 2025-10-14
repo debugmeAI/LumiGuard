@@ -52,7 +52,7 @@ export default function RecentCondition() {
 						<Breadcrumb>
 							<BreadcrumbList>
 								<BreadcrumbItem className="hidden md:block">
-									Signal Monitor
+									Machine Monitor
 								</BreadcrumbItem>
 								<BreadcrumbSeparator className="hidden md:block" />
 								<BreadcrumbItem>
@@ -71,7 +71,7 @@ export default function RecentCondition() {
 						<CardHeader>
 							<CardTitle className="flex items-center gap-2">
 								<ClockFading className="w-5 h-5" />
-								Recent Condition
+								Machine Condition
 							</CardTitle>
 							<CardDescription>
 								<span className="hidden @[540px]/card:block">

@@ -114,6 +114,7 @@ export default function HistoricalData() {
 				row.availability_oee,
 				formatSeconds(row.planned_production_seconds),
 				row.shift_type,
+				row.red_count,
 			];
 		});
 
@@ -208,7 +209,7 @@ export default function HistoricalData() {
 						<Breadcrumb>
 							<BreadcrumbList>
 								<BreadcrumbItem className="hidden md:block">
-									Signal Monitor
+									Machine Monitor
 								</BreadcrumbItem>
 								<BreadcrumbSeparator className="hidden md:block" />
 								<BreadcrumbItem>

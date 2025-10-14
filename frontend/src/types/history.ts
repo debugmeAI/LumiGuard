@@ -49,7 +49,6 @@ export interface SummaryData {
 	date_range: DateRange;
 }
 
-// Tambahkan interface ini ke file types/history Anda
 export interface DatePerformance {
 	date: string;
 	red_seconds: string;
@@ -64,9 +63,9 @@ export interface DatePerformance {
 	availability_oee: string;
 	shift_type: string;
 	total_seconds?: string;
+	red_count: string;
 }
 
-// Update SummaryData interface
 export interface SummaryData {
 	total: StatusSummary;
 	per_date: DatePerformance[];

@@ -108,6 +108,7 @@ interface ApiTotal {
 	planned_night_seconds: string;
 	availability_oee: string;
 	shift_type: string;
+	red_count: string;
 }
 
 interface ApiResponse {
@@ -421,6 +422,7 @@ function OverviewContent() {
 										planned_night_seconds={
 											totalData.planned_night_seconds
 										}
+										red_count={totalData.red_count}
 									/>
 								)}
 								{hasGantt && (

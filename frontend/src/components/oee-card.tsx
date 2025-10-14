@@ -21,6 +21,7 @@ interface OEECardProps {
 	planned_morning_seconds?: string;
 	planned_night_seconds?: string;
 	total_seconds: string;
+	red_count: string;
 }
 
 export function OEECard({
@@ -33,6 +34,7 @@ export function OEECard({
 	planned_morning_seconds,
 	planned_night_seconds,
 	total_seconds,
+	red_count,
 }: OEECardProps) {
 	const oeeValue = parseFloat(availability_oee);
 	const plannedSeconds = parseFloat(planned_production_seconds);
@@ -41,6 +43,7 @@ export function OEECard({
 	const idleSeconds = parseFloat(amber_seconds);
 	const unknownSeconds = parseFloat(unknown_seconds);
 	const totalSeconds = parseFloat(total_seconds);
+	const countError = red_count;
 
 	const formatTime = (seconds: number) => {
 		const hours = Math.floor(seconds / 3600);
@@ -158,7 +161,7 @@ export function OEECard({
 					<div className="p-5 rounded-xl bg-green-50 dark:bg-green-950 border border-green-300 dark:border-green-700 shadow-sm shadow-green-200/50 dark:shadow-green-900/20 transition-all duration-300 hover:shadow-md">
 						<div className="flex items-start justify-between">
 							<div className="flex items-start gap-3">
-								<div className="p-2 rounded-lg bg-green-100 dark:bg-green-900">
+								<div className="mt-1.5 p-2 rounded-lg bg-green-100 dark:bg-green-900">
 									<Play className="w-5 h-5 text-green-600 dark:text-green-400" />
 								</div>
 								<div className="flex-1">
@@ -188,7 +191,7 @@ export function OEECard({
 					<div className="flex-1 p-5 rounded-xl bg-red-50 dark:bg-red-950 border border-red-300 dark:border-red-700 shadow-sm shadow-red-200/50 dark:shadow-red-900/20 transition-all duration-300 hover:shadow-md">
 						<div className="flex items-start justify-between mb-4">
 							<div className="flex items-start gap-3">
-								<div className="p-2 rounded-lg bg-red-100 dark:bg-red-900">
+								<div className="mt-1.5 p-2 rounded-lg bg-red-100 dark:bg-red-900">
 									<AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
 								</div>
 								<div className="flex-1">
@@ -213,23 +216,37 @@ export function OEECard({
 								</div>
 							</div>
 						</div>
-						<div className="grid grid-cols-2 gap-3">
-							<div className="p-3 rounded-lg bg-white/60 dark:bg-black/40 border border-red-200 dark:border-red-800 text-center transition-colors duration-200 hover:bg-white/80 dark:hover:bg-black/60">
-								<div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-									Error Time
-								</div>
-								<div className="text-lg font-bold text-red-600 dark:text-red-400">
-									{formatTimeDisplay(
-										errorTime.hours,
-										errorTime.minutes
-									)}
-								</div>
-								<div className="text-xs text-gray-500">
-									{errorPercentage.toFixed(2)}%
+						<div className="grid grid-cols-3 gap-3">
+							<div className="col-span-2 p-3 rounded-lg bg-white/60 dark:bg-black/40 border border-red-200 dark:border-red-800 transition-colors duration-200 hover:bg-white/80 dark:hover:bg-black/60">
+								<div className="grid grid-cols-2 gap-4">
+									<div className="text-center border-r border-red-200 dark:border-red-800">
+										<div className="text-xs text-gray-600 dark:text-gray-400">
+											Error Time
+										</div>
+										<div className="text-lg font-bold text-red-600 dark:text-red-400">
+											{formatTimeDisplay(
+												errorTime.hours,
+												errorTime.minutes
+											)}
+										</div>
+										<div className="text-xs text-gray-500">
+											{errorPercentage.toFixed(2)}%
+										</div>
+									</div>
+
+									<div className="text-center">
+										<div className="text-xs text-gray-600 dark:text-gray-400">
+											Error Count
+										</div>
+										<div className="text-4xl font-bold text-red-600 dark:text-red-400">
+											{countError}
+										</div>
+									</div>
 								</div>
 							</div>
+
 							<div className="p-3 rounded-lg bg-white/60 dark:bg-black/40 border border-amber-200 dark:border-amber-800 text-center transition-colors duration-200 hover:bg-white/80 dark:hover:bg-black/60">
-								<div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+								<div className="text-xs text-gray-600 dark:text-gray-400">
 									Idle Time
 								</div>
 								<div className="text-lg font-bold text-amber-600 dark:text-amber-400">
@@ -276,7 +293,7 @@ export function OEECard({
 						<div className="p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-orange-300 dark:border-orange-700 shadow-sm shadow-orange-200/50 dark:shadow-orange-900/20 transition-all duration-300 hover:shadow-md">
 							<div className="flex items-start justify-between">
 								<div className="flex items-start gap-3">
-									<div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900">
+									<div className="mt-1.5 p-2 rounded-lg bg-orange-100 dark:bg-orange-900">
 										<HelpCircle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
 									</div>
 									<div className="flex-1">

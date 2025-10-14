@@ -33,6 +33,7 @@ export interface DatePerformance {
 	shift_type: string;
 	total_seconds?: string;
 	shift_period?: string;
+	red_count: string;
 }
 
 interface DateTableProps {
@@ -139,6 +140,9 @@ export default function DateTable({ data }: DateTableProps) {
 								Error Time
 							</TableHead>
 							<TableHead className="text-center">
+								Error Count
+							</TableHead>
+							<TableHead className="text-center">
 								Unknown Time
 							</TableHead>
 							<TableHead className="text-center">
@@ -213,6 +217,13 @@ export default function DateTable({ data }: DateTableProps) {
 								</TableCell>
 								<TableCell className="text-center">
 									<div className="flex flex-col">
+										<span className="text-xl font-medium text-red-600 dark:text-red-400">
+											{dateData.red_count}
+										</span>
+									</div>
+								</TableCell>
+								<TableCell className="text-center">
+									<div className="flex flex-col">
 										<span className="font-semibold text-gray-600 dark:text-gray-400">
 											{dateData.unknown_percent}%
 										</span>
@@ -225,7 +236,7 @@ export default function DateTable({ data }: DateTableProps) {
 								</TableCell>
 								<TableCell className="text-center">
 									<div className="flex flex-col">
-										<span className="font-semibold text-sm text-blue-600 dark:text-blue-400">
+										<span className="text-xl font-medium text-blue-600 dark:text-blue-400">
 											{formatSeconds(
 												dateData.total_seconds || "0"
 											)}
@@ -243,14 +254,14 @@ export default function DateTable({ data }: DateTableProps) {
 								</TableCell>
 								<TableCell className="text-center">
 									<div className="flex flex-col">
-										<span className="text-sm font-medium">
+										<span className="text-xl font-medium">
 											{formatSeconds(
 												dateData.planned_production_seconds
 											)}
 										</span>
 									</div>
 								</TableCell>
-								<TableCell className="text-center">
+								<TableCell className="text-center text-sm">
 									<Badge
 										variant={getShiftTypeVariant(
 											dateData.shift_type
