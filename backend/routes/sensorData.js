@@ -124,11 +124,9 @@ router.get("/summary", async (req, res) => {
 				}
 				const typeLabel = isFriday
 					? hasOvertime
-						? "Pagi Overtime (10h)"
-						: "Pagi Normal (8h)"
-					: `${
-							hasOvertime ? "Pagi Overtime" : "Pagi Normal"
-					  } (${hours}h)`;
+						? "Overtime (10h)"
+						: "Normal (8h)"
+					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
 				return { seconds: hours * 3600, type: typeLabel };
 			}
 
@@ -136,11 +134,9 @@ router.get("/summary", async (req, res) => {
 				const hours = hasOvertime ? 10.5 : 8;
 				const typeLabel = isFriday
 					? hasOvertime
-						? "Malam Overtime (10.5h)"
-						: "Malam Normal (8h)"
-					: `${
-							hasOvertime ? "Malam Overtime" : "Malam Normal"
-					  } (${hours}h)`;
+						? "Overtime (10.5h)"
+						: "Normal (8h)"
+					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
 				return { seconds: hours * 3600, type: typeLabel };
 			}
 
@@ -734,11 +730,9 @@ router.get("/summary-range", async (req, res) => {
 				}
 				const typeLabel = isFriday
 					? hasOvertime
-						? "Pagi Overtime (10h)"
-						: "Pagi Normal (8h)"
-					: `${
-							hasOvertime ? "Pagi Overtime" : "Pagi Normal"
-					  } (${hours}h)`;
+						? "Overtime (10h)"
+						: "Normal (8h)"
+					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
 				return { seconds: hours * 3600, type: typeLabel };
 			}
 
@@ -746,11 +740,9 @@ router.get("/summary-range", async (req, res) => {
 				const hours = hasOvertime ? 10.5 : 8;
 				const typeLabel = isFriday
 					? hasOvertime
-						? "Malam Overtime (10.5h)"
-						: "Malam Normal (8h)"
-					: `${
-							hasOvertime ? "Malam Overtime" : "Malam Normal"
-					  } (${hours}h)`;
+						? "Overtime (10.5h)"
+						: "Normal (8h)"
+					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
 				return { seconds: hours * 3600, type: typeLabel };
 			}
 
@@ -1229,11 +1221,9 @@ router.get("/summary-history", async (req, res) => {
 				}
 				const typeLabel = isFriday
 					? hasOvertime
-						? "Pagi Overtime (10h)"
-						: "Pagi Normal (8h)"
-					: `${
-							hasOvertime ? "Pagi Overtime" : "Pagi Normal"
-					  } (${hours}h)`;
+						? "Overtime (10h)"
+						: "Normal (8h)"
+					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
 				return { seconds: hours * 3600, type: typeLabel };
 			}
 
@@ -1241,11 +1231,9 @@ router.get("/summary-history", async (req, res) => {
 				const hours = hasOvertime ? 10.5 : 8;
 				const typeLabel = isFriday
 					? hasOvertime
-						? "Malam Overtime (10.5h)"
-						: "Malam Normal (8h)"
-					: `${
-							hasOvertime ? "Malam Overtime" : "Malam Normal"
-					  } (${hours}h)`;
+						? "Overtime (10.5h)"
+						: "Normal (8h)"
+					: `${hasOvertime ? "Overtime" : "Normal"} (${hours}h)`;
 				return { seconds: hours * 3600, type: typeLabel };
 			}
 			const morningTs = timestamps.filter((ts) => {
