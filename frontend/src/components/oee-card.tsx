@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import {
 	TrendingUp,
 	TrendingDown,
-	Minus,
+	MoveHorizontal,
 	Play,
 	AlertCircle,
 	HelpCircle,
@@ -99,7 +99,7 @@ export function OEECard({
 				color: "text-yellow-600 dark:text-yellow-400",
 				bg: "bg-yellow-50 dark:bg-yellow-950",
 				border: "border-yellow-300 dark:border-yellow-700 shadow-sm shadow-yellow-200/50 dark:shadow-yellow-900/20",
-				icon: Minus,
+				icon: MoveHorizontal,
 			};
 		return {
 			label: "Poor",
@@ -221,6 +221,18 @@ export function OEECard({
 								<div className="flex items-start">
 									<div className="flex-1 text-center">
 										<div className="text-xs text-gray-600 dark:text-gray-400">
+											Total Errors
+										</div>
+										<div className="text-lg font-bold text-red-600 dark:text-red-400">
+											{countError}
+										</div>
+										<div className="text-xs text-gray-500">
+											Occurrences
+										</div>
+									</div>
+									<div className="w-px bg-gray-300 dark:bg-gray-700 mx-3 self-stretch"></div>
+									<div className="flex-1 text-center">
+										<div className="text-xs text-gray-600 dark:text-gray-400">
 											Error Time
 										</div>
 										<div className="text-lg font-bold text-red-600 dark:text-red-400">
@@ -231,20 +243,6 @@ export function OEECard({
 										</div>
 										<div className="text-xs text-gray-500">
 											{errorPercentage.toFixed(2)}%
-										</div>
-									</div>
-
-									<div className="w-px bg-gray-300 dark:bg-gray-700 mx-3 self-stretch"></div>
-
-									<div className="flex-1 text-center">
-										<div className="text-xs text-gray-600 dark:text-gray-400">
-											Total Errors
-										</div>
-										<div className="text-lg font-bold text-red-600 dark:text-red-400">
-											{countError}
-										</div>
-										<div className="text-xs text-gray-500">
-											Occurrences
 										</div>
 									</div>
 								</div>

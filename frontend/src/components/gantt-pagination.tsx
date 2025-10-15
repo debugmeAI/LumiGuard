@@ -41,7 +41,7 @@ export function PaginationControls({
 			</Button>
 
 			<div className="px-2 text-sm font-medium">
-				Page {currentPage + 1} / {totalPages}
+				Page {currentPage + 1} of {totalPages}
 			</div>
 
 			<Button

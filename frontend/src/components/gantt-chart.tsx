@@ -128,7 +128,7 @@ export function GanttChart({
 		},
 		tooltip: {
 			theme: isDark ? "dark" : "light",
-			x: { format: "dd/MM/yyyy HH:mm:ss" },
+			x: { format: "HH:mm:ss" },
 		},
 		legend: {
 			position: "right",

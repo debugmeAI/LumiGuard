@@ -16,6 +16,9 @@ import {
 	ChevronsRight,
 	Calendar,
 	Clock,
+	TrendingUp,
+	TrendingDown,
+	MoveHorizontal,
 } from "lucide-react";
 
 export interface DatePerformance {
@@ -100,11 +103,43 @@ export default function DateTable({ data }: DateTableProps) {
 		return `${formattedDate} 07:00 - ${nextDayStr} 07:00`;
 	};
 
-	const getOEEVariant = (oee: string) => {
-		const value = parseFloat(oee);
-		if (value >= 80) return "default";
-		if (value >= 60) return "secondary";
-		return "destructive";
+	const getOEEVariant = (oee: string | number) => {
+		const value = typeof oee === "string" ? parseFloat(oee) : oee;
+
+		if (value >= 85)
+			return {
+				label: "Excellent",
+				color: "text-green-600 dark:text-green-400",
+				bg: "bg-green-50 dark:bg-green-950",
+				border: "border-green-300 dark:border-green-700 shadow-sm shadow-green-200/50 dark:shadow-green-900/20",
+				icon: TrendingUp,
+			};
+
+		if (value >= 70)
+			return {
+				label: "Good",
+				color: "text-blue-600 dark:text-blue-400",
+				bg: "bg-blue-50 dark:bg-blue-950",
+				border: "border-blue-300 dark:border-blue-700 shadow-sm shadow-blue-200/50 dark:shadow-blue-900/20",
+				icon: TrendingUp,
+			};
+
+		if (value >= 50)
+			return {
+				label: "Fair",
+				color: "text-yellow-600 dark:text-yellow-400",
+				bg: "bg-yellow-50 dark:bg-yellow-950",
+				border: "border-yellow-300 dark:border-yellow-700 shadow-sm shadow-yellow-200/50 dark:shadow-yellow-900/20",
+				icon: MoveHorizontal,
+			};
+
+		return {
+			label: "Poor",
+			color: "text-red-600 dark:text-red-400",
+			bg: "bg-red-50 dark:bg-red-950",
+			border: "border-red-300 dark:border-red-700 shadow-sm shadow-red-200/50 dark:shadow-red-900/20",
+			icon: TrendingDown,
+		};
 	};
 
 	const getShiftTypeVariant = (shiftType: string) => {
@@ -158,120 +193,127 @@ export default function DateTable({ data }: DateTableProps) {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{currentData.map((dateData, index) => (
-							<TableRow key={`${dateData.date}-${index}`}>
-								<TableCell className="font-medium">
-									<div className="flex items-center gap-2">
-										<div className="flex flex-col items-center">
-											<Calendar className="h-4 w-4 text-muted-foreground" />
-											<Clock className="h-3 w-3 text-muted-foreground mt-1" />
+						{currentData.map((dateData, index) => {
+							const info = getOEEVariant(
+								dateData.availability_oee
+							);
+
+							return (
+								<TableRow key={`${dateData.date}-${index}`}>
+									<TableCell className="font-medium">
+										<div className="flex items-center gap-2">
+											<div className="flex flex-col items-center">
+												<Calendar className="h-4 w-4 text-muted-foreground" />
+												<Clock className="h-3 w-3 text-muted-foreground mt-1" />
+											</div>
+											<div className="flex flex-col">
+												<span className="font-semibold text-sm">
+													{formatDateYMD(
+														dateData.date
+													)}
+												</span>
+												<span className="text-xs text-muted-foreground font-normal">
+													{formatDateWithPeriod(
+														dateData.date,
+														dateData.shift_period
+													)}
+												</span>
+											</div>
 										</div>
+									</TableCell>
+									<TableCell className="text-center">
 										<div className="flex flex-col">
-											<span className="font-semibold text-sm">
-												{formatDateYMD(dateData.date)}
+											<span className="font-semibold text-green-600 dark:text-green-400">
+												{dateData.green_percent}%
 											</span>
-											<span className="text-xs text-muted-foreground font-normal">
-												{formatDateWithPeriod(
-													dateData.date,
-													dateData.shift_period
+											<span className="text-xs text-muted-foreground">
+												{formatSeconds(
+													dateData.green_seconds
 												)}
 											</span>
 										</div>
-									</div>
-								</TableCell>
-								<TableCell className="text-center">
-									<div className="flex flex-col">
-										<span className="font-semibold text-green-600 dark:text-green-400">
-											{dateData.green_percent}%
-										</span>
-										<span className="text-xs text-muted-foreground">
-											{formatSeconds(
-												dateData.green_seconds
+									</TableCell>
+									<TableCell className="text-center">
+										<div className="flex flex-col">
+											<span className="font-semibold text-yellow-600 dark:text-yellow-400">
+												{dateData.amber_percent}%
+											</span>
+											<span className="text-xs text-muted-foreground">
+												{formatSeconds(
+													dateData.amber_seconds
+												)}
+											</span>
+										</div>
+									</TableCell>
+									<TableCell className="text-center">
+										<div className="flex flex-col">
+											<span className="font-semibold text-red-600 dark:text-red-400">
+												{dateData.red_percent}%
+											</span>
+											<span className="text-xs text-muted-foreground">
+												{formatSeconds(
+													dateData.red_seconds
+												)}
+											</span>
+										</div>
+									</TableCell>
+									<TableCell className="text-center">
+										<div className="flex flex-col">
+											<span className="text-xl font-medium text-red-600 dark:text-red-400">
+												{dateData.red_count}
+											</span>
+										</div>
+									</TableCell>
+									<TableCell className="text-center">
+										<div className="flex flex-col">
+											<span className="font-semibold text-gray-600 dark:text-gray-400">
+												{dateData.unknown_percent}%
+											</span>
+											<span className="text-xs text-muted-foreground">
+												{formatSeconds(
+													dateData.unknown_seconds
+												)}
+											</span>
+										</div>
+									</TableCell>
+									<TableCell className="text-center">
+										<div className="flex flex-col">
+											<span className="text-xl font-medium text-blue-600 dark:text-blue-400">
+												{formatSeconds(
+													dateData.total_seconds ||
+														"0"
+												)}
+											</span>
+										</div>
+									</TableCell>
+									<TableCell className="text-center">
+										<Badge
+											className={`text-base border ${info.color} ${info.bg} ${info.border}`}>
+											<info.icon className="w-4 h-4 mr-1" />
+											{dateData.availability_oee}%
+										</Badge>
+									</TableCell>
+									<TableCell className="text-center">
+										<div className="flex flex-col">
+											<span className="text-xl font-medium">
+												{formatSeconds(
+													dateData.planned_production_seconds
+												)}
+											</span>
+										</div>
+									</TableCell>
+									<TableCell className="text-center text-sm">
+										<Badge
+											variant={getShiftTypeVariant(
+												dateData.shift_type
 											)}
-										</span>
-									</div>
-								</TableCell>
-								<TableCell className="text-center">
-									<div className="flex flex-col">
-										<span className="font-semibold text-yellow-600 dark:text-yellow-400">
-											{dateData.amber_percent}%
-										</span>
-										<span className="text-xs text-muted-foreground">
-											{formatSeconds(
-												dateData.amber_seconds
-											)}
-										</span>
-									</div>
-								</TableCell>
-								<TableCell className="text-center">
-									<div className="flex flex-col">
-										<span className="font-semibold text-red-600 dark:text-red-400">
-											{dateData.red_percent}%
-										</span>
-										<span className="text-xs text-muted-foreground">
-											{formatSeconds(
-												dateData.red_seconds
-											)}
-										</span>
-									</div>
-								</TableCell>
-								<TableCell className="text-center">
-									<div className="flex flex-col">
-										<span className="text-xl font-medium text-red-600 dark:text-red-400">
-											{dateData.red_count}
-										</span>
-									</div>
-								</TableCell>
-								<TableCell className="text-center">
-									<div className="flex flex-col">
-										<span className="font-semibold text-gray-600 dark:text-gray-400">
-											{dateData.unknown_percent}%
-										</span>
-										<span className="text-xs text-muted-foreground">
-											{formatSeconds(
-												dateData.unknown_seconds
-											)}
-										</span>
-									</div>
-								</TableCell>
-								<TableCell className="text-center">
-									<div className="flex flex-col">
-										<span className="text-xl font-medium text-blue-600 dark:text-blue-400">
-											{formatSeconds(
-												dateData.total_seconds || "0"
-											)}
-										</span>
-									</div>
-								</TableCell>
-								<TableCell className="text-center">
-									<Badge
-										variant={getOEEVariant(
-											dateData.availability_oee
-										)}
-										className="text-sm py-1 px-2">
-										{dateData.availability_oee}%
-									</Badge>
-								</TableCell>
-								<TableCell className="text-center">
-									<div className="flex flex-col">
-										<span className="text-xl font-medium">
-											{formatSeconds(
-												dateData.planned_production_seconds
-											)}
-										</span>
-									</div>
-								</TableCell>
-								<TableCell className="text-center text-sm">
-									<Badge
-										variant={getShiftTypeVariant(
-											dateData.shift_type
-										)}
-										className="text-sm">
-										{dateData.shift_type}
-									</Badge>
-								</TableCell>
-							</TableRow>
-						))}
+											className="text-sm">
+											{dateData.shift_type}
+										</Badge>
+									</TableCell>
+								</TableRow>
+							);
+						})}
 					</TableBody>
 				</Table>
 			</div>
