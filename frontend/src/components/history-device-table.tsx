@@ -142,6 +142,19 @@ export default function DateTable({ data }: DateTableProps) {
 		};
 	};
 
+	const getUtilizationColor = (utilization: number) => {
+		if (utilization >= 90) {
+			return "text-green-600 dark:text-green-400";
+		}
+		if (utilization >= 75) {
+			return "text-blue-600 dark:text-blue-400";
+		}
+		if (utilization >= 60) {
+			return "text-yellow-600 dark:text-yellow-400";
+		}
+		return "text-red-600 dark:text-red-400";
+	};
+
 	const getShiftTypeVariant = (shiftType: string) => {
 		if (shiftType.includes("Overtime")) return "secondary";
 		if (shiftType.includes("Normal")) return "secondary";
@@ -154,6 +167,18 @@ export default function DateTable({ data }: DateTableProps) {
 		const month = d.toLocaleString("en-US", { month: "long" });
 		const day = d.getDate();
 		return `${year} ${month} ${day}`;
+	};
+
+	const calculateUtilization = (
+		totalSeconds: string,
+		plannedSeconds: string
+	): string => {
+		const total = parseFloat(totalSeconds || "0");
+		const planned = parseFloat(plannedSeconds || "0");
+
+		if (planned === 0) return "0";
+
+		return ((total / planned) * 100).toFixed(1);
 	};
 
 	return (
@@ -197,10 +222,18 @@ export default function DateTable({ data }: DateTableProps) {
 							const info = getOEEVariant(
 								dateData.availability_oee
 							);
+							const utilization = parseFloat(
+								calculateUtilization(
+									dateData.total_seconds || "0",
+									dateData.planned_production_seconds
+								)
+							);
+							const utilizationColor =
+								getUtilizationColor(utilization);
 
 							return (
 								<TableRow key={`${dateData.date}-${index}`}>
-									<TableCell className="font-medium">
+									<TableCell className="font-semibold">
 										<div className="flex items-center gap-2">
 											<div className="flex flex-col items-center">
 												<Calendar className="h-4 w-4 text-muted-foreground" />
@@ -259,7 +292,7 @@ export default function DateTable({ data }: DateTableProps) {
 									</TableCell>
 									<TableCell className="text-center">
 										<div className="flex flex-col">
-											<span className="text-xl font-medium text-red-600 dark:text-red-400">
+											<span className="text-lg font-semibold text-red-600 dark:text-red-400">
 												{dateData.red_count}
 											</span>
 										</div>
@@ -278,7 +311,11 @@ export default function DateTable({ data }: DateTableProps) {
 									</TableCell>
 									<TableCell className="text-center">
 										<div className="flex flex-col">
-											<span className="text-xl font-medium text-blue-600 dark:text-blue-400">
+											<span
+												className={`font-semibold ${utilizationColor}`}>
+												{utilization}%
+											</span>
+											<span className="text-xs text-muted-foreground">
 												{formatSeconds(
 													dateData.total_seconds ||
 														"0"
@@ -288,14 +325,14 @@ export default function DateTable({ data }: DateTableProps) {
 									</TableCell>
 									<TableCell className="text-center">
 										<Badge
-											className={`text-base border ${info.color} ${info.bg} ${info.border}`}>
+											className={`text-base font-semibold border ${info.color} ${info.bg} ${info.border}`}>
 											<info.icon className="w-4 h-4 mr-1" />
 											{dateData.availability_oee}%
 										</Badge>
 									</TableCell>
 									<TableCell className="text-center">
 										<div className="flex flex-col">
-											<span className="text-xl font-medium">
+											<span className="text-lg font-semibold">
 												{formatSeconds(
 													dateData.planned_production_seconds
 												)}
