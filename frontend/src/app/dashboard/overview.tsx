@@ -423,6 +423,12 @@ function OverviewContent() {
 											totalData.planned_night_seconds
 										}
 										red_count={totalData.red_count}
+										green_percent={totalData.green_percent}
+										amber_percent={totalData.amber_percent}
+										red_percent={totalData.red_percent}
+										unknown_percent={
+											totalData.unknown_percent
+										}
 									/>
 								)}
 								{hasGantt && (

@@ -22,6 +22,10 @@ interface OEECardProps {
 	planned_night_seconds?: string;
 	total_seconds: string;
 	red_count: string;
+	red_percent: string | null;
+	amber_percent: string | null;
+	green_percent: string | null;
+	unknown_percent: string | null;
 }
 
 export function OEECard({
@@ -33,8 +37,11 @@ export function OEECard({
 	unknown_seconds,
 	planned_morning_seconds,
 	planned_night_seconds,
-	total_seconds,
 	red_count,
+	red_percent,
+	amber_percent,
+	green_percent,
+	unknown_percent,
 }: OEECardProps) {
 	const oeeValue = parseFloat(availability_oee);
 	const plannedSeconds = parseFloat(planned_production_seconds);
@@ -42,7 +49,6 @@ export function OEECard({
 	const errorSeconds = parseFloat(red_seconds);
 	const idleSeconds = parseFloat(amber_seconds);
 	const unknownSeconds = parseFloat(unknown_seconds);
-	const totalSeconds = parseFloat(total_seconds);
 	const countError = red_count;
 
 	const formatTime = (seconds: number) => {
@@ -56,7 +62,6 @@ export function OEECard({
 	const errorTime = formatTime(errorSeconds);
 	const idleTime = formatTime(idleSeconds);
 	const unknownTime = formatTime(unknownSeconds);
-	const totalTime = totalSeconds;
 
 	const downtimeSeconds = errorSeconds + idleSeconds;
 	const downtimeTime = formatTime(downtimeSeconds);
@@ -64,14 +69,15 @@ export function OEECard({
 	const totalOperatingSeconds = runSeconds + errorSeconds + idleSeconds;
 	const totalOperatingTime = formatTime(totalOperatingSeconds);
 
-	const runPercentage = totalTime > 0 ? (runSeconds / totalTime) * 100 : 0;
-	const errorPercentage =
-		totalTime > 0 ? (errorSeconds / totalTime) * 100 : 0;
-	const idlePercentage = totalTime > 0 ? (idleSeconds / totalTime) * 100 : 0;
-	const downtimePercentage =
-		totalTime > 0 ? (downtimeSeconds / totalTime) * 100 : 0;
-	const unknownPercentage =
-		totalTime > 0 ? (unknownSeconds / plannedSeconds) * 100 : 0;
+	const runPercentage = green_percent;
+	const redValue = Number(red_percent ?? "0");
+	const amberValue = Number(amber_percent ?? "0");
+
+	const errorPercentage = redValue.toFixed(2);
+	const idlePercentage = amberValue.toFixed(2);
+	const downtimePercentage = (redValue + amberValue).toFixed(2);
+
+	const unknownPercentage = unknown_percent;
 
 	const utilizationPercentage =
 		plannedSeconds > 0 ? (totalOperatingSeconds / plannedSeconds) * 100 : 0;
@@ -169,8 +175,7 @@ export function OEECard({
 										Run Time
 									</div>
 									<div className="text-sm text-gray-600 dark:text-gray-400">
-										{runPercentage.toFixed(2)}% of operating
-										time
+										{runPercentage}% of operating time
 									</div>
 								</div>
 							</div>
@@ -199,8 +204,7 @@ export function OEECard({
 										Total Downtime
 									</div>
 									<div className="text-sm text-gray-600 dark:text-gray-400">
-										{downtimePercentage.toFixed(2)}% of
-										operating time
+										{downtimePercentage}% of operating time
 									</div>
 								</div>
 							</div>
@@ -242,7 +246,7 @@ export function OEECard({
 											)}
 										</div>
 										<div className="text-xs text-gray-500">
-											{errorPercentage.toFixed(2)}%
+											{errorPercentage}%
 										</div>
 									</div>
 								</div>
@@ -259,7 +263,7 @@ export function OEECard({
 									)}
 								</div>
 								<div className="text-xs text-gray-500">
-									{idlePercentage.toFixed(2)}%
+									{idlePercentage}%
 								</div>
 							</div>
 						</div>
@@ -304,8 +308,7 @@ export function OEECard({
 											Unknown Time
 										</div>
 										<div className="text-sm text-gray-500">
-											{unknownPercentage.toFixed(2)}% of
-											planned time
+											{unknownPercentage}% of planned time
 										</div>
 									</div>
 								</div>

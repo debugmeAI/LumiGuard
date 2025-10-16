@@ -178,7 +178,7 @@ export default function DateTable({ data }: DateTableProps) {
 
 		if (planned === 0) return "0";
 
-		return ((total / planned) * 100).toFixed(1);
+		return ((total / planned) * 100).toFixed(2);
 	};
 
 	return (
