@@ -3,6 +3,7 @@ require("module-alias/register");
 const express = require("express");
 const router = express.Router();
 const knex = require("@db/knex");
+
 router.get("/summary", async (req, res) => {
 	try {
 		const { date, shift } = req.query;
@@ -15,7 +16,10 @@ router.get("/summary", async (req, res) => {
 
 		const getLogicalDate = (timestamp) => {
 			const d = new Date(timestamp);
-			if (d.getHours() < 7) {
+			if (
+				d.getHours() < 6 ||
+				(d.getHours() === 6 && d.getMinutes() < 50)
+			) {
 				d.setDate(d.getDate() - 1);
 			}
 			const pad = (n) => n.toString().padStart(2, "0");
@@ -30,18 +34,18 @@ router.get("/summary", async (req, res) => {
 
 			switch (shiftType?.toLowerCase()) {
 				case "morning":
-					startTime.setHours(7, 0, 0, 0);
-					endTime.setHours(19, 0, 0, 0);
+					startTime.setHours(6, 50, 0, 0);
+					endTime.setHours(18, 50, 0, 0);
 					break;
 				case "night":
-					startTime.setHours(19, 0, 0, 0);
+					startTime.setHours(18, 50, 0, 0);
 					endTime.setDate(endTime.getDate() + 1);
-					endTime.setHours(7, 0, 0, 0);
+					endTime.setHours(6, 50, 0, 0);
 					break;
 				default:
-					startTime.setHours(7, 0, 0, 0);
+					startTime.setHours(6, 50, 0, 0);
 					endTime.setDate(endTime.getDate() + 1);
-					endTime.setHours(7, 0, 0, 0);
+					endTime.setHours(6, 50, 0, 0);
 			}
 			return { startTime, endTime };
 		};
@@ -63,8 +67,16 @@ router.get("/summary", async (req, res) => {
 		};
 
 		const getShiftInfo = (timestamp) => {
-			const hour = new Date(timestamp).getHours();
-			const shift = hour >= 7 && hour < 19 ? "Morning" : "Night";
+			const d = new Date(timestamp);
+			const hour = d.getHours();
+			const minute = d.getMinutes();
+
+			const shift =
+				(hour > 6 && hour < 18) ||
+				(hour === 6 && minute >= 50) ||
+				(hour === 18 && minute < 50)
+					? "Morning"
+					: "Night";
 			return { shift };
 		};
 
@@ -94,13 +106,19 @@ router.get("/summary", async (req, res) => {
 
 			if (shiftType === "Morning") {
 				return timestamps.some((ts) => {
-					const hour = new Date(ts).getHours();
+					const d = new Date(ts);
+					const hour = d.getHours();
+					const minute = d.getMinutes();
 					return hour >= 16;
 				});
 			} else if (shiftType === "Night") {
 				return timestamps.some((ts) => {
-					const hour = new Date(ts).getHours();
-					return hour >= 4 && hour < 7;
+					const d = new Date(ts);
+					const hour = d.getHours();
+					const minute = d.getMinutes();
+					return (
+						hour >= 4 && (hour < 6 || (hour === 6 && minute < 50))
+					);
 				});
 			}
 			return false;
@@ -145,12 +163,24 @@ router.get("/summary", async (req, res) => {
 			}
 
 			const morningTs = timestamps.filter((ts) => {
-				const h = new Date(ts).getHours();
-				return h >= 7 && h < 19;
+				const d = new Date(ts);
+				const h = d.getHours();
+				const m = d.getMinutes();
+				return (
+					(h > 6 && h < 18) ||
+					(h === 6 && m >= 50) ||
+					(h === 18 && m < 50)
+				);
 			});
 			const nightTs = timestamps.filter((ts) => {
-				const h = new Date(ts).getHours();
-				return h >= 19 || h < 7;
+				const d = new Date(ts);
+				const h = d.getHours();
+				const m = d.getMinutes();
+				return (
+					(h >= 18 && (h > 18 || m >= 50)) ||
+					h < 6 ||
+					(h === 6 && m < 50)
+				);
 			});
 
 			const morningHasOvertime = detectOvertimeFromTimestamps(
@@ -397,12 +427,22 @@ router.get("/summary", async (req, res) => {
 
 		const allTimestamps = rawData.map((r) => r.insert_timestamp);
 		const morningTimestamps = allTimestamps.filter((ts) => {
-			const h = new Date(ts).getHours();
-			return h >= 7 && h < 19;
+			const d = new Date(ts);
+			const h = d.getHours();
+			const m = d.getMinutes();
+			return (
+				(h > 6 && h < 18) ||
+				(h === 6 && m >= 50) ||
+				(h === 18 && m < 50)
+			);
 		});
 		const nightTimestamps = allTimestamps.filter((ts) => {
-			const h = new Date(ts).getHours();
-			return h >= 19 || h < 7;
+			const d = new Date(ts);
+			const h = d.getHours();
+			const m = d.getMinutes();
+			return (
+				(h >= 18 && (h > 18 || m >= 50)) || h < 6 || (h === 6 && m < 50)
+			);
 		});
 
 		Object.values(processed.shifts).forEach((shiftData) => {
@@ -632,7 +672,7 @@ router.get("/summary", async (req, res) => {
 			gantt: finalGanttSeries,
 		});
 	} catch (err) {
-		console.error("GET /summary error:", err);
+		console.error("GET /summary-history error:", err);
 		res.status(500).json({
 			error: "Internal Server Error",
 			message: err.message,
@@ -653,7 +693,10 @@ router.get("/summary-range", async (req, res) => {
 
 		const getLogicalDate = (timestamp) => {
 			const d = new Date(timestamp);
-			if (d.getHours() < 7) {
+			if (
+				d.getHours() < 6 ||
+				(d.getHours() === 6 && d.getMinutes() < 50)
+			) {
 				d.setDate(d.getDate() - 1);
 			}
 			const pad = (n) => n.toString().padStart(2, "0");
@@ -668,18 +711,18 @@ router.get("/summary-range", async (req, res) => {
 
 			switch (shiftType?.toLowerCase()) {
 				case "morning":
-					startTime.setHours(7, 0, 0, 0);
-					endTime.setHours(19, 0, 0, 0);
+					startTime.setHours(6, 50, 0, 0);
+					endTime.setHours(18, 50, 0, 0);
 					break;
 				case "night":
-					startTime.setHours(19, 0, 0, 0);
+					startTime.setHours(18, 50, 0, 0);
 					endTime.setDate(endTime.getDate() + 1);
-					endTime.setHours(7, 0, 0, 0);
+					endTime.setHours(6, 50, 0, 0);
 					break;
 				default:
-					startTime.setHours(7, 0, 0, 0);
+					startTime.setHours(6, 50, 0, 0);
 					endTime.setDate(endTime.getDate() + 1);
-					endTime.setHours(7, 0, 0, 0);
+					endTime.setHours(6, 50, 0, 0);
 			}
 			return { startTime, endTime };
 		};
@@ -701,8 +744,16 @@ router.get("/summary-range", async (req, res) => {
 		};
 
 		const getShiftInfo = (timestamp) => {
-			const hour = new Date(timestamp).getHours();
-			const shift = hour >= 7 && hour < 19 ? "Morning" : "Night";
+			const d = new Date(timestamp);
+			const hour = d.getHours();
+			const minute = d.getMinutes();
+
+			const shift =
+				(hour > 6 && hour < 18) ||
+				(hour === 6 && minute >= 50) ||
+				(hour === 18 && minute < 50)
+					? "Morning"
+					: "Night";
 			return { shift };
 		};
 
@@ -728,13 +779,19 @@ router.get("/summary-range", async (req, res) => {
 
 			if (shiftType === "Morning") {
 				return timestamps.some((ts) => {
-					const hour = new Date(ts).getHours();
+					const d = new Date(ts);
+					const hour = d.getHours();
+					const minute = d.getMinutes();
 					return hour >= 16;
 				});
 			} else if (shiftType === "Night") {
 				return timestamps.some((ts) => {
-					const hour = new Date(ts).getHours();
-					return hour >= 4 && hour < 7;
+					const d = new Date(ts);
+					const hour = d.getHours();
+					const minute = d.getMinutes();
+					return (
+						hour >= 4 && (hour < 6 || (hour === 6 && minute < 50))
+					);
 				});
 			}
 			return false;
@@ -779,12 +836,24 @@ router.get("/summary-range", async (req, res) => {
 			}
 
 			const morningTs = timestamps.filter((ts) => {
-				const h = new Date(ts).getHours();
-				return h >= 7 && h < 19;
+				const d = new Date(ts);
+				const h = d.getHours();
+				const m = d.getMinutes();
+				return (
+					(h > 6 && h < 18) ||
+					(h === 6 && m >= 50) ||
+					(h === 18 && m < 50)
+				);
 			});
 			const nightTs = timestamps.filter((ts) => {
-				const h = new Date(ts).getHours();
-				return h >= 19 || h < 7;
+				const d = new Date(ts);
+				const h = d.getHours();
+				const m = d.getMinutes();
+				return (
+					(h >= 18 && (h > 18 || m >= 50)) ||
+					h < 6 ||
+					(h === 6 && m < 50)
+				);
 			});
 
 			const morningHasOvertime = detectOvertimeFromTimestamps(
@@ -936,12 +1005,24 @@ router.get("/summary-range", async (req, res) => {
 				results.total.green_seconds;
 
 			const morningTs = allTimestamps.filter((ts) => {
-				const h = new Date(ts).getHours();
-				return h >= 7 && h < 19;
+				const d = new Date(ts);
+				const h = d.getHours();
+				const m = d.getMinutes();
+				return (
+					(h > 6 && h < 18) ||
+					(h === 6 && m >= 50) ||
+					(h === 18 && m < 50)
+				);
 			});
 			const nightTs = allTimestamps.filter((ts) => {
-				const h = new Date(ts).getHours();
-				return h >= 19 || h < 7;
+				const d = new Date(ts);
+				const h = d.getHours();
+				const m = d.getMinutes();
+				return (
+					(h >= 18 && (h > 18 || m >= 50)) ||
+					h < 6 ||
+					(h === 6 && m < 50)
+				);
 			});
 
 			let plannedMorning = 0;
@@ -1144,7 +1225,10 @@ router.get("/summary-history", async (req, res) => {
 
 		const getLogicalDate = (timestamp) => {
 			const d = new Date(timestamp);
-			if (d.getHours() < 7) {
+			if (
+				d.getHours() < 6 ||
+				(d.getHours() === 6 && d.getMinutes() < 50)
+			) {
 				d.setDate(d.getDate() - 1);
 			}
 			const pad = (n) => n.toString().padStart(2, "0");
@@ -1159,18 +1243,18 @@ router.get("/summary-history", async (req, res) => {
 
 			switch (shiftType?.toLowerCase()) {
 				case "morning":
-					startTime.setHours(7, 0, 0, 0);
-					endTime.setHours(19, 0, 0, 0);
+					startTime.setHours(6, 50, 0, 0);
+					endTime.setHours(18, 50, 0, 0);
 					break;
 				case "night":
-					startTime.setHours(19, 0, 0, 0);
+					startTime.setHours(18, 50, 0, 0);
 					endTime.setDate(endTime.getDate() + 1);
-					endTime.setHours(7, 0, 0, 0);
+					endTime.setHours(6, 50, 0, 0);
 					break;
 				default:
-					startTime.setHours(7, 0, 0, 0);
+					startTime.setHours(6, 50, 0, 0);
 					endTime.setDate(endTime.getDate() + 1);
-					endTime.setHours(7, 0, 0, 0);
+					endTime.setHours(6, 50, 0, 0);
 			}
 			return { startTime, endTime };
 		};
@@ -1192,8 +1276,16 @@ router.get("/summary-history", async (req, res) => {
 		};
 
 		const getShiftInfo = (timestamp) => {
-			const hour = new Date(timestamp).getHours();
-			const shift = hour >= 7 && hour < 19 ? "Morning" : "Night";
+			const d = new Date(timestamp);
+			const hour = d.getHours();
+			const minute = d.getMinutes();
+
+			const shift =
+				(hour > 6 && hour < 18) ||
+				(hour === 6 && minute >= 50) ||
+				(hour === 18 && minute < 50)
+					? "Morning"
+					: "Night";
 			return { shift };
 		};
 
@@ -1223,13 +1315,19 @@ router.get("/summary-history", async (req, res) => {
 
 			if (shiftType === "Morning") {
 				return timestamps.some((ts) => {
-					const hour = new Date(ts).getHours();
+					const d = new Date(ts);
+					const hour = d.getHours();
+					const minute = d.getMinutes();
 					return hour >= 16;
 				});
 			} else if (shiftType === "Night") {
 				return timestamps.some((ts) => {
-					const hour = new Date(ts).getHours();
-					return hour >= 4 && hour < 7;
+					const d = new Date(ts);
+					const hour = d.getHours();
+					const minute = d.getMinutes();
+					return (
+						hour >= 4 && (hour < 6 || (hour === 6 && minute < 50))
+					);
 				});
 			}
 			return false;
@@ -1273,12 +1371,24 @@ router.get("/summary-history", async (req, res) => {
 				return { seconds: hours * 3600, type: typeLabel };
 			}
 			const morningTs = timestamps.filter((ts) => {
-				const h = new Date(ts).getHours();
-				return h >= 7 && h < 19;
+				const d = new Date(ts);
+				const h = d.getHours();
+				const m = d.getMinutes();
+				return (
+					(h > 6 && h < 18) ||
+					(h === 6 && m >= 50) ||
+					(h === 18 && m < 50)
+				);
 			});
 			const nightTs = timestamps.filter((ts) => {
-				const h = new Date(ts).getHours();
-				return h >= 19 || h < 7;
+				const d = new Date(ts);
+				const h = d.getHours();
+				const m = d.getMinutes();
+				return (
+					(h >= 18 && (h > 18 || m >= 50)) ||
+					h < 6 ||
+					(h === 6 && m < 50)
+				);
 			});
 
 			const morningHasOvertime = detectOvertimeFromTimestamps(
@@ -1424,13 +1534,25 @@ router.get("/summary-history", async (req, res) => {
 				nightType = "No Data";
 
 			const morningTimestamps = allTimestamps.filter((ts) => {
-				const h = new Date(ts).getHours();
-				return h >= 7 && h < 19;
+				const d = new Date(ts);
+				const h = d.getHours();
+				const m = d.getMinutes();
+				return (
+					(h > 6 && h < 18) ||
+					(h === 6 && m >= 50) ||
+					(h === 18 && m < 50)
+				);
 			});
 
 			const nightTimestamps = allTimestamps.filter((ts) => {
-				const h = new Date(ts).getHours();
-				return h >= 19 || h < 7;
+				const d = new Date(ts);
+				const h = d.getHours();
+				const m = d.getMinutes();
+				return (
+					(h >= 18 && (h > 18 || m >= 50)) ||
+					h < 6 ||
+					(h === 6 && m < 50)
+				);
 			});
 
 			if (
